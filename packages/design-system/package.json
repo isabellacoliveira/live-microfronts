@@ -1,0 +1,13 @@
+{
+  "name": "@live-microfronts/design-system",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo 'design-system build placeholder'",
+    "lint": "echo 'design-system lint placeholder'"
+  },
+  "dependencies": {
+    "react": "^18.3.1"
+  }
+}

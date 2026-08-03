@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@design-system": ["../../packages/design-system/src/index.ts"],
+      "@design-system/*": ["../../packages/design-system/src/*"],
+      "@shared-utils": ["../../packages/shared-utils/src/index.ts"],
+      "@shared-utils/*": ["../../packages/shared-utils/src/*"],
+      "profile_mfe/*": ["../../apps/profile-mfe-react/src/*"],
+      "dashboard_mfe/*": ["../../apps/dashboard-mfe-react/src/*"]
+    }
+  },
+  "include": ["src"]
+}
