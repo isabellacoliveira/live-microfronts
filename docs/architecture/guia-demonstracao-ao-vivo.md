@@ -57,6 +57,49 @@ Neste projeto, o Host React abre a aplicação Angular da porta `5003` dentro de
 
 ---
 
+### Por que existe a pasta `packages`?
+
+A pasta `packages` reúne **bibliotecas internas compartilhadas**. Ela representa tudo aquilo que não pertence a um único domínio/MFE, mas que precisa ter uma implementação e um contrato comuns no ecossistema.
+
+Neste projeto:
+
+- `design-system`: componentes visuais reutilizáveis, como `Button`, `Card`, `Input`, `Badge` e `Loading`;
+- `shared-utils`: mecanismos comuns de comunicação, eventos e estado de bootstrap;
+- `shared-types`: tipos que podem ser compartilhados entre aplicações;
+- `eslint-config`: convenções de qualidade e estilo de código.
+
+**Fala sugerida**
+
+> “A pasta `packages` não é outro MFE. Ela é a camada de capacidades compartilhadas. Ela evita que cada time recrie botão, contratos de eventos ou tipos de dados de maneiras diferentes.”
+
+O cuidado é não transformar `packages` em um lugar para regras de negócio de todos os domínios. Quanto mais código de negócio centralizado ali, menor a autonomia real dos MFEs. O ideal é compartilhar somente aquilo que é genuinamente transversal: design, contratos, utilitários e padrões.
+
+### Por que todos os MFEs estão no mesmo repositório?
+
+Sim, isso é uma **escolha de arquitetura e de operação**: este projeto usa um **monorepo**. As aplicações permanecem separadas em `apps/`, com seus próprios builds e portas, mas vivem no mesmo repositório junto com os pacotes compartilhados.
+
+Não existe uma resposta universal; microfrontends podem usar monorepo ou vários repositórios. A escolha depende de como os times trabalham, da maturidade de CI/CD e do grau de autonomia necessário.
+
+**Vantagens desta escolha neste projeto**
+
+- Desenvolvimento local simples: um comando sobe Host, remotes e Angular.
+- Mudanças coordenadas: é mais fácil atualizar um contrato de evento e os consumidores na mesma alteração.
+- Reuso local de `packages` sem publicar bibliotecas privadas.
+- Padronização de ferramentas, lint, TypeScript e scripts.
+- Demonstração didática clara: toda a arquitetura pode ser vista em um único lugar.
+
+**Trade-offs**
+
+- O repositório cresce e exige boas regras de ownership e pipelines seletivos.
+- Uma mudança compartilhada pode afetar vários MFEs, então contratos e versionamento continuam importantes.
+- Estarem no mesmo repositório **não obriga** deploy conjunto: com pipelines bem configurados, cada MFE ainda pode ser construído e publicado de forma independente.
+
+**Fala sugerida**
+
+> “Microfrontend não significa necessariamente vários repositórios. Aqui usamos monorepo para compartilhar padrões e facilitar o desenvolvimento. A independência que importa é a de domínio, build e deploy; o código pode estar organizado no mesmo repositório quando isso reduz o custo operacional.”
+
+---
+
 ## Preparação antes de começar
 
 ### Checklist técnico (5 minutos antes)
