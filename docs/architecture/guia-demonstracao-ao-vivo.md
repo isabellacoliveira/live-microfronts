@@ -27,6 +27,16 @@ Em uma frase: **cada parte tem uma responsabilidade de negócio clara, o Host or
 
 ## Conceitos curtos para explicar antes da demonstração
 
+### O que são Host, remote e Module Federation?
+
+- **Host** é a aplicação que compõe a experiência: neste projeto, ela oferece navegação, loading, fallback e o Dashboard consolidado.
+- **Remote** é uma aplicação que expõe uma parte da interface para o Host consumir em runtime: aqui, Cliente e Catálogo são remotes React.
+- **Module Federation** é o mecanismo que permite ao Host localizar e importar módulos expostos pelos remotes em outro servidor, quando necessário.
+
+**Fala sugerida**
+
+> “O Host monta a experiência final. Cada remote entrega um domínio específico. Module Federation é a ponte que permite ao Host buscar esse módulo remoto em runtime, sem colocá-lo inteiro no bundle inicial.”
+
 ### O que é um módulo?
 
 Um **módulo** é uma unidade de código com uma responsabilidade definida que pode exportar algo para ser usado em outro lugar. Esse “algo” pode ser uma função, um componente, um tipo ou uma constante.
@@ -44,6 +54,19 @@ No contexto de Module Federation, o módulo pode estar em **outra aplicação e 
 `remoteEntry.js` é o **arquivo de entrada do remote**. Ele funciona como um catálogo/runtime: informa ao Host quais módulos aquele MFE disponibiliza e como obter os arquivos JavaScript necessários para executá-los.
 
 Ele não é a tela inteira do MFE nem contém, necessariamente, todo o código do formulário. É o primeiro arquivo que permite ao Host localizar o módulo exposto, como `./App`; depois, o navegador pode buscar chunks adicionais da aplicação.
+
+### O que é fallback?
+
+**Fallback** é uma interface alternativa apresentada quando o conteúdo principal ainda não pode ser mostrado ou falha. Em microfrontends, ele impede que um problema em um remote deixe a tela inteira em branco.
+
+Neste projeto há dois tipos de fallback:
+
+- durante o carregamento: o `Suspense` exibe o componente `Loading`;
+- se o remote falhar: `remoteLoaders` mostra a mensagem de indisponibilidade e o `ErrorBoundary` protege a área renderizada.
+
+**Fala sugerida**
+
+> “Fallback é o plano B da interface. Se o remote estiver lento, mostramos loading; se estiver indisponível, mostramos uma mensagem clara. O Host continua funcionando e a falha fica limitada ao domínio afetado.”
 
 ### O que é um iframe?
 
@@ -323,6 +346,109 @@ Use uma aba anônima ou recarregue a página com o DevTools aberto. Na aba **Net
 > “O remote declara o que expõe. O Host declara onde o encontra. Em tempo de execução, o Host importa `dashboard_mfe/App`. React e React DOM são compartilhados para evitar runtimes duplicados e problemas de hooks.”
 
 **Conceito comprovado:** `exposes`, `remotes`, `remoteEntry` e dependências compartilhadas.
+
+---
+
+## Cenários extras para demonstrar (escolha 1 ou 2)
+
+Estes cenários tornam visíveis os trade-offs de microfrontends. Não é necessário executar todos; o cenário de remote indisponível é o mais forte para uma apresentação curta.
+
+### Cenário A — Um remote React fica indisponível
+
+**O que prova:** o Host continua sendo uma aplicação utilizável e apresenta um fallback para a área que depende do remote.
+
+**Como preparar**
+
+1. Deixe o Host aberto no Dashboard.
+2. Em outro terminal, encerre apenas o MFE Cliente, que usa a porta `5002`:
+
+    ```bash
+    kill "$(lsof -ti tcp:5002)"
+    ```
+
+3. No navegador, faça uma recarga completa do Host e clique em **Cliente**.
+4. Mostre a mensagem “O MFE Customer não está disponível.”
+5. No DevTools > **Network**, mostre a falha da requisição para `remoteEntry.js` na porta `5002`.
+
+**O que dizer**
+
+> “O Host não precisa cair porque um domínio remoto está fora. A funcionalidade Cliente ficou indisponível, mas Dashboard, Catálogo já carregado e navegação continuam disponíveis. Isso é isolamento de falha na experiência, não eliminação da falha.”
+
+**Onde mostrar no código:** [Host — orquestração e navegação](../../apps/host-react/src/main.tsx), em `remoteLoaders` e `ErrorBoundary`.
+
+**Como restaurar**
+
+```bash
+(corepack pnpm --filter profile-mfe-react preview > /tmp/live-microfronts/profile.log 2>&1 &)
+```
+
+Depois, recarregue o Host. Se necessário, confirme a porta com `./dev.sh status`.
+
+> Execute este cenário perto do fim ou restaure o remote antes de seguir para o fluxo principal. Um módulo remoto que já foi carregado pode continuar em memória; por isso a recarga completa é importante para demonstrar a indisponibilidade.
+
+### Cenário B — Abrir o Catálogo antes do cadastro
+
+**O que prova:** o Catálogo é um MFE independente e trata a ausência do contexto necessário.
+
+**Como demonstrar**
+
+1. Em uma aba anônima, abra o Host e clique primeiro em **Catálogo de seguros**.
+2. Mostre “Aguardando cadastro”.
+3. Tente contratar um seguro e mostre o aviso para cadastrar a cliente.
+4. Vá para **Cliente**, salve o cadastro e retorne ao Catálogo.
+5. Mostre “Olá, Isabella”.
+
+**O que dizer**
+
+> “O MFE Catálogo não importa o MFE Cliente e não assume que ele já foi carregado. Ele reage ao contrato de dados: sem cliente, orienta o usuário; com cliente, libera a contratação.”
+
+**Onde mostrar no código:** [MFE Catálogo — consumo e contratação](../../apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx), em `getSharedState()`, `subscribe()` e `contract()`.
+
+### Cenário C — Recarregar o Host depois do cadastro
+
+**O que prova:** evento e estado de bootstrap têm responsabilidades diferentes.
+
+**Como demonstrar**
+
+1. Salve o cadastro da cliente.
+2. Recarregue o Host.
+3. Abra o Catálogo: o nome da cliente ainda aparece.
+4. Explique que os contratos do Dashboard voltam a zero porque eles ficam apenas na memória do Host, enquanto o último cliente foi persistido no `sessionStorage`.
+
+**O que dizer**
+
+> “Eventos servem para reagir no momento em que algo acontece. O `sessionStorage` foi usado apenas como bootstrap para um MFE que entra depois. Em produção, contratos e cliente viriam de uma API persistente.”
+
+### Cenário D — Parar apenas o Angular
+
+**O que prova:** o iframe cria uma fronteira de runtime e a falha fica restrita à área de notificações.
+
+**Como demonstrar**
+
+1. Com o Host aberto, encerre a porta `5003`:
+
+    ```bash
+    kill "$(lsof -ti tcp:5003)"
+    ```
+
+2. Abra **Notificações** e mostre que somente o conteúdo do iframe falha; o cabeçalho e a navegação do Host continuam ativos.
+3. Volte ao Dashboard para reforçar que o fluxo React não depende do runtime Angular.
+
+**O que dizer**
+
+> “O iframe isola tecnologias e também limita o impacto visual de uma falha. O Host ainda precisa oferecer um tratamento melhor para a área do iframe em produção, como timeout, mensagem amigável e botão de tentar novamente.”
+
+**Como restaurar**
+
+```bash
+(corepack pnpm --filter notifications-mfe-angular preview > /tmp/live-microfronts/angular.log 2>&1 &)
+```
+
+### Cenário E — O que não simular ao vivo, mas vale citar
+
+Não é recomendado simular `ChunkLoadError` durante a apresentação: ele costuma exigir deploy/caching de versões diferentes e pode deixar o ambiente inconsistente. Cite o caso assim:
+
+> “Se um remote publicar uma versão nova enquanto o Host do usuário está em cache, o `remoteEntry` ou um chunk antigo pode apontar para um arquivo que não existe mais. Por isso produção precisa de estratégia de cache, versionamento, observabilidade e recuperação de erro.”
 
 ---
 

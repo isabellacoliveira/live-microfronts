@@ -11,12 +11,14 @@ import {
 type RemoteModule = { default: React.ComponentType };
 type Route = 'dashboard' | 'customer' | 'catalog' | 'notifications';
 
+// Evita que uma falha de um remote derrube toda a experiência do Host.
 class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallback: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
   render() { return this.state.hasError ? this.props.fallback : this.props.children; }
 }
 
+// Imports dinâmicos: o código do MFE só é buscado quando a rota é acessada.
 const remoteLoaders: Record<'customer' | 'catalog', () => Promise<RemoteModule>> = {
   customer: async () => {
     try { return await import('profile_mfe/App'); } catch { return { default: () => <p>O MFE Customer não está disponível.</p> }; }
@@ -30,6 +32,7 @@ const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: '
 const date = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short' });
 
 function RemoteContainer({ route }: { route: 'customer' | 'catalog' }) {
+  // React.lazy aciona o Module Federation; Suspense cobre o tempo de rede.
   const Component = React.lazy(remoteLoaders[route]);
   return <ErrorBoundary fallback={<Card>Não foi possível carregar este microfrontend.</Card>}><Suspense fallback={<Loading />}><Component /></Suspense></ErrorBoundary>;
 }
@@ -62,6 +65,7 @@ function PortalDashboard({ contracts }: { contracts: InsuranceContract[] }) {
 function NotificationsFrame({ contracts }: { contracts: InsuranceContract[] }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   useEffect(() => {
+    // O Angular fica isolado no iframe; contratos chegam por postMessage.
     const forwardContracts = () => postMessageToIframe(iframeRef.current?.contentWindow ?? null, { insuranceContracts: contracts });
     forwardContracts();
     const timer = window.setInterval(forwardContracts, 1200);
@@ -77,6 +81,7 @@ function App() {
   useEffect(() => {
     const onHashChange = () => setRoute((window.location.hash.slice(1) as Route) || 'dashboard');
     window.addEventListener('hashchange', onHashChange);
+    // O Host escuta um evento de domínio, sem importar a lógica do Catálogo.
     const unsubscribe = subscribe<InsuranceContract>(INSURANCE_EVENTS.insuranceContracted, (contract) => {
       setContracts((current) => current.some((item) => item.id === contract.id) ? current : [contract, ...current]);
     });
