@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { Button, Card, Input, Loading } from "@design-system";
 import {
@@ -6,6 +6,10 @@ import {
   publishMessage,
   setSharedState,
   subscribeMessage,
+  subscribeIframeBridge,
+  postMessageToIframe,
+  getActivityFeed,
+  ActivityEvent,
 } from "@shared-utils";
 
 // Host simples.
@@ -39,13 +43,6 @@ class ErrorBoundary extends React.Component<
 // Carregadores reais dos remotes via Module Federation.
 // Quando o runtime remoto não estiver disponível, o host usa o componente local como fallback.
 const remoteLoaders: Record<string, () => Promise<RemoteModule>> = {
-  // dashboard: async () => {
-  //   try {
-  //     return await import('dashboard_mfe/App');
-  //   } catch {
-  //     return { default: () => <p>O remote do dashboard não carregou em runtime.</p> };
-  //   }
-  // },
   dashboard: async () => {
     try {
       return await import("dashboard_mfe/App");
@@ -74,7 +71,7 @@ const remoteLoaders: Record<string, () => Promise<RemoteModule>> = {
             src="http://127.0.0.1:5003/"
             style={{
               width: "100%",
-              height: "480px",
+              height: "520px",
               border: "1px solid #e5e7eb",
               borderRadius: "0.75rem",
               background: "white",
@@ -109,6 +106,50 @@ function RemotePanel({
   );
 }
 
+function NotificationsHost() {
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  // Forward current shared state to the iframe whenever notifications route is active.
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (iframeRef.current) {
+        postMessageToIframe(iframeRef.current.contentWindow, getSharedState());
+      }
+    }, 1500);
+
+    return () => window.clearInterval(id);
+  }, []);
+
+  return (
+    <div
+      style={{
+        minHeight: "60vh",
+        display: "grid",
+        placeItems: "center",
+        border: "1px solid #e5e7eb",
+        borderRadius: "1rem",
+        padding: "2rem",
+        background: "#f9fafb",
+      }}
+    >
+      <div style={{ width: "100%", maxWidth: "720px" }}>
+        <iframe
+          ref={iframeRef}
+          title="Notifications MFE (Angular)"
+          src="http://127.0.0.1:5003/"
+          style={{
+            width: "100%",
+            height: "520px",
+            border: "1px solid #e5e7eb",
+            borderRadius: "0.75rem",
+            background: "white",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [route, setRoute] = useState(
     () => window.location.hash.replace("#", "") || "dashboard",
@@ -116,10 +157,14 @@ function App() {
   const [lastMessage, setLastMessage] = useState("Nenhuma mensagem ainda");
   const [draftValue, setDraftValue] = useState(() => getSharedState().text);
   const [sharedState, setSharedStateValue] = useState(() => getSharedState());
+  const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>(() =>
+    getActivityFeed(),
+  );
 
   useEffect(() => {
     const onHashChange = () =>
       setRoute(window.location.hash.replace("#", "") || "dashboard");
+
     const unsubscribeMessage = subscribeMessage(
       "microfrontends:message",
       (event: Event) => {
@@ -127,6 +172,7 @@ function App() {
         setLastMessage(detail?.text || "Mensagem recebida");
       },
     );
+
     const unsubscribeState = subscribeMessage(
       "microfrontends:shared-state",
       (event: Event) => {
@@ -145,10 +191,40 @@ function App() {
       },
     );
 
+    const unsubscribeActivity = subscribeMessage(
+      "microfrontends:activity",
+      (event: Event) => {
+        const entry = (event as CustomEvent<ActivityEvent>).detail;
+        if (entry) {
+          setActivityFeed((prev) => [entry, ...prev].slice(0, 50));
+        }
+      },
+    );
+
+// Recebe eventos vindos do iframe Angular (ponte postMessage).
+    const unsubscribeBridge = subscribeIframeBridge((payload) => {
+      const p = payload as { text?: string; source?: string; scope?: string };
+      if (p && typeof p === "object") {
+        const nextState = setSharedState({
+          text: p.text || "Angular enviou via postMessage",
+          source: "angular",
+          scope: "notifications",
+        });
+        setSharedStateValue(nextState);
+        setDraftValue(nextState.text);
+        publishMessage("microfrontends:message", {
+          text: `Angular (iframe): ${p.text || "evento"}`,
+          source: "angular",
+        });
+      }
+    });
+
     window.addEventListener("hashchange", onHashChange);
     return () => {
       unsubscribeMessage();
       unsubscribeState();
+      unsubscribeActivity();
+      unsubscribeBridge();
       window.removeEventListener("hashchange", onHashChange);
     };
   }, []);
@@ -179,7 +255,7 @@ function App() {
     });
     setSharedStateValue(nextState);
     setDraftValue(nextState.text);
-    publishMessage("microfrontends:message", { text: message });
+    publishMessage("microfrontends:message", { text: message, source: "host" });
   };
 
   const handleShare = () => {
@@ -191,6 +267,7 @@ function App() {
     setSharedStateValue(nextState);
     publishMessage("microfrontends:message", {
       text: `Estado compartilhado: ${nextState.text}`,
+      source: "host",
     });
   };
 
@@ -252,22 +329,67 @@ function App() {
         </div>
       </Card>
 
-      {route === "notifications" ? (
-        <div
-          style={{
-            minHeight: "60vh",
-            display: "grid",
-            placeItems: "center",
-            border: "1px solid #e5e7eb",
-            borderRadius: "1rem",
-            padding: "2rem",
-            background: "#f9fafb",
-          }}
-        >
-          <div style={{ width: "100%", maxWidth: "720px" }}>
-            <RemotePanel loader={remoteLoader} title={title} />
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Activity Feed (barramento de eventos)</h3>
+        {activityFeed.length === 0 ? (
+          <p style={{ color: "#6b7280", fontSize: "0.85rem" }}>
+            Nenhum evento de comunicação ainda. Clique em um botão acima para
+            começar.
+          </p>
+        ) : (
+          <div
+            style={{
+              maxHeight: "260px",
+              overflowY: "auto",
+              display: "grid",
+              gap: "0.35rem",
+            }}
+          >
+            {activityFeed.map((entry) => (
+              <div
+                key={entry.id}
+                style={{
+                  padding: "0.4rem 0.7rem",
+                  borderRadius: "0.4rem",
+                  background: "#f3f4f6",
+                  fontSize: "0.8rem",
+                  display: "flex",
+                  gap: "0.5rem",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  style={{
+                    color: "#6b7280",
+                    flexShrink: 0,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {new Date(entry.timestamp).toLocaleTimeString("pt-BR")}
+                </span>
+                <span
+                  style={{
+                    flexShrink: 0,
+                    padding: "0.1rem 0.45rem",
+                    borderRadius: "999px",
+                    background: "#eef2ff",
+                    color: "#4338ca",
+                    fontWeight: 600,
+                  }}
+                >
+                  {entry.source}
+                </span>
+                <span style={{ color: "#4b5563", wordBreak: "break-all" }}>
+                  {entry.label}
+                </span>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
+      </Card>
+
+      {route === "notifications" ? (
+        <NotificationsHost />
       ) : (
         <RemotePanel loader={remoteLoader} title={title} />
       )}

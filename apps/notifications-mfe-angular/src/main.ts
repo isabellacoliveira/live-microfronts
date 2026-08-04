@@ -7,9 +7,11 @@ import { Component, OnInit } from '@angular/core';
 // Notifications MFE Angular.
 // Responsabilidade: demonstrar um microfrontend Angular coexistindo com React.
 // Este MFE implementa a spec de notifications: lista, badge de contador e preferências.
-// Comunicação: sessionStorage + Custom Events (mesmo padrão dos MFEs React).
+// Comunicação: sessionStorage + Custom Events (mesmo padrão dos MFEs React) +
+// ponte postMessage para quando rodar dentro do iframe do host (porta 5173).
 
 const STORAGE_KEY = 'live-microfronts:shared-state';
+const BRIDGE_CHANNEL = 'microfrontends:iframe-bridge';
 
 type NotificationItem = {
   id: string;
@@ -59,6 +61,13 @@ function getSharedState(): SharedState {
 function publishMessage(eventName: string, detail: unknown) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(eventName, { detail }));
+  }
+}
+
+// Envia um evento para o host (quando rodando dentro do iframe do host).
+function publishToParent(detail: unknown) {
+  if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+    window.parent.postMessage({ channel: BRIDGE_CHANNEL, payload: detail }, '*');
   }
 }
 
@@ -171,10 +180,17 @@ class AppComponent implements OnInit {
       : this.notifications;
   }
 
-  ngOnInit() {
+ngOnInit() {
     this.syncFromSession();
     window.addEventListener('storage', this.handleStorageChange);
     window.addEventListener('microfrontends:shared-state', this.handleSharedState as EventListener);
+    window.addEventListener('message', this.handleBridgeMessage);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('storage', this.handleStorageChange);
+    window.removeEventListener('microfrontends:shared-state', this.handleSharedState as EventListener);
+    window.removeEventListener('message', this.handleBridgeMessage);
   }
 
   syncFromSession() {
@@ -199,15 +215,20 @@ class AppComponent implements OnInit {
     this.publishCount();
   }
 
-  publishDemo() {
-    publishMessage('microfrontends:message', { text: 'Angular notificou via CustomEvent' });
+publishDemo() {
+    const detail = { text: 'Angular notificou via CustomEvent', source: 'angular' };
+    publishMessage('microfrontends:message', detail);
+    publishToParent(detail);
   }
 
   private publishCount() {
     const unread = this.unreadCount;
-    publishMessage('microfrontends:message', {
+    const detail = {
       text: `Angular: ${unread} notificação${unread === 1 ? '' : 'ões'} não lida${unread === 1 ? '' : 's'}`,
-    });
+      source: 'angular',
+    };
+    publishMessage('microfrontends:message', detail);
+    publishToParent(detail);
   }
 
   private handleStorageChange = (event: StorageEvent) => {
@@ -218,6 +239,14 @@ class AppComponent implements OnInit {
 
   private handleSharedState = () => {
     this.syncFromSession();
+  };
+
+  private handleBridgeMessage = (event: MessageEvent) => {
+    const data = event.data as { channel?: string; payload?: SharedState } | null;
+    if (data && data.channel === BRIDGE_CHANNEL && data.payload) {
+      this.stateText = data.payload.text || this.stateText;
+      this.sharedSource = data.payload.source || this.sharedSource;
+    }
   };
 }
 

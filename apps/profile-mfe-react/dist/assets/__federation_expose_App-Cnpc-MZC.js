@@ -74,30 +74,28 @@ function Input(props) {
 }
 
 const STORAGE_KEY = "live-microfronts:shared-state";
+const ACTIVITY_KEY = "live-microfronts:activity-feed";
+const EVENT_STATE = "microfrontends:shared-state";
+function defaultState() {
+  return {
+    text: "Nenhuma mensagem ainda",
+    source: "initial",
+    counter: 0,
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+}
 function getSharedState() {
   if (typeof window === "undefined") {
-    return {
-      text: "Nenhuma mensagem ainda",
-      source: "initial",
-      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-    };
+    return defaultState();
   }
   try {
     const raw = window.sessionStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return {
-        text: "Nenhuma mensagem ainda",
-        source: "initial",
-        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-      };
+      return defaultState();
     }
-    return JSON.parse(raw);
+    return { ...defaultState(), ...JSON.parse(raw) };
   } catch {
-    return {
-      text: "Nenhuma mensagem ainda",
-      source: "initial",
-      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-    };
+    return defaultState();
   }
 }
 function setSharedState(partial) {
@@ -110,13 +108,45 @@ function setSharedState(partial) {
     updatedAt: (/* @__PURE__ */ new Date()).toISOString()
   };
   window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-  publishMessage("microfrontends:shared-state", nextState);
+  publishMessage(EVENT_STATE, nextState);
   return nextState;
+}
+function getActivityFeed() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  try {
+    const raw = window.sessionStorage.getItem(ACTIVITY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+function appendActivity(feedEvent) {
+  const entry = {
+    ...feedEvent,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    timestamp: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  if (typeof window !== "undefined") {
+    const current = getActivityFeed();
+    const next = [entry, ...current].slice(0, 50);
+    window.sessionStorage.setItem(ACTIVITY_KEY, JSON.stringify(next));
+    publishMessage("microfrontends:activity", entry);
+  }
+  return entry;
 }
 function publishMessage(eventName, detail) {
   if (typeof window === "undefined") {
     return;
   }
+  const source = detail && typeof detail === "object" && detail.source ? String(detail.source) : "host";
+  appendActivity({
+    source,
+    type: eventName.indexOf("state") !== -1 ? "state" : eventName.indexOf("activity") !== -1 ? "event" : "message",
+    label: eventName,
+    detail
+  });
   window.dispatchEvent(new CustomEvent(eventName, { detail }));
 }
 function subscribeMessage(eventName, handler) {
@@ -130,22 +160,52 @@ function subscribeMessage(eventName, handler) {
 const {useEffect,useState} = await importShared('react');
 function ProfileApp() {
   const [sharedState, setSharedStateValue] = useState(() => getSharedState());
+  const [name, setName] = useState("Isabella Cruz");
+  const [email, setEmail] = useState("isabella@exemplo.com");
+  const [eventLog, setEventLog] = useState([]);
   useEffect(() => {
     const unsubscribe = subscribeMessage("microfrontends:shared-state", (event) => {
       const detail = event.detail;
       setSharedStateValue(detail ? { ...getSharedState(), ...detail } : getSharedState());
     });
-    return unsubscribe;
+    const unsubscribeActivity = subscribeMessage("microfrontends:activity", (event) => {
+      const entry = event.detail;
+      if (entry) {
+        setEventLog((prev) => [entry, ...prev].slice(0, 15));
+      }
+    });
+    return () => {
+      unsubscribe();
+      unsubscribeActivity();
+    };
   }, []);
   const handleUpdate = () => {
     const nextState = setSharedState({ text: "Profile MFE atualizou o estado", source: "profile", scope: "profile" });
     setSharedStateValue(nextState);
-    publishMessage("microfrontends:message", { text: "Profile atualizou o estado" });
+    publishMessage("microfrontends:message", { text: "Profile atualizou o estado", source: "profile" });
+  };
+  const handlePublishProfile = () => {
+    appendActivity({
+      source: "profile",
+      type: "event",
+      label: "Perfil atualizado",
+      detail: { name, email }
+    });
+    const nextState = setSharedState({
+      text: `Perfil: ${name} <${email}>`,
+      source: "profile",
+      scope: "profile"
+    });
+    setSharedStateValue(nextState);
+    publishMessage("microfrontends:message", {
+      text: `Profile: ${name} atualizou o perfil`,
+      source: "profile"
+    });
   };
   const handleSyncFromSession = () => {
     const nextState = getSharedState();
     setSharedStateValue(nextState);
-    publishMessage("microfrontends:message", { text: `Sincronizado: ${nextState.text}` });
+    publishMessage("microfrontends:message", { text: `Sincronizado: ${nextState.text}`, source: "profile" });
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "1.5rem", display: "grid", gap: "1rem" }, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "linear-gradient(135deg, #0f766e, #14b8a6)", color: "white", padding: "1.25rem", borderRadius: "1rem" }, children: [
@@ -154,8 +214,23 @@ function ProfileApp() {
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "Dados do usuário" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { placeholder: "Nome" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { placeholder: "Email" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Input,
+        {
+          placeholder: "Nome",
+          value: name,
+          onChange: (e) => setName(e.target.value)
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "0.5rem" } }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Input,
+        {
+          placeholder: "Email",
+          value: email,
+          onChange: (e) => setEmail(e.target.value)
+        }
+      ),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Último estado recebido:" }),
         " ",
@@ -167,9 +242,32 @@ function ProfileApp() {
         sharedState.source
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "0.75rem", marginTop: "1rem", flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handlePublishProfile, children: "Publicar perfil" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleUpdate, children: "Atualizar estado" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "secondary", onClick: handleSyncFromSession, children: "Sincronizar do sessionStorage" })
       ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "Log de eventos recebidos" }),
+      eventLog.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "#6b7280", fontSize: "0.85rem" }, children: "Nenhum evento recebido ainda." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { maxHeight: "200px", overflowY: "auto", display: "grid", gap: "0.35rem" }, children: eventLog.map((entry) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          style: {
+            padding: "0.35rem 0.65rem",
+            borderRadius: "0.35rem",
+            background: "#f3f4f6",
+            fontSize: "0.8rem",
+            display: "flex",
+            gap: "0.5rem"
+          },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "#6b7280", flexShrink: 0 }, children: new Date(entry.timestamp).toLocaleTimeString("pt-BR") }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 600, flexShrink: 0 }, children: entry.source }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "#4b5563", wordBreak: "break-all" }, children: entry.label })
+          ]
+        },
+        entry.id
+      )) })
     ] })
   ] });
 }

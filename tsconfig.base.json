@@ -1,26 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": false,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "strict": true,
-    "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
-      "@app/*": ["apps/*"],
-      "@design-system/*": ["packages/design-system/src/*"],
       "@design-system": ["packages/design-system/src/index.ts"],
-      "@shared-types/*": ["packages/shared-types/src/*"],
+      "@design-system/*": ["packages/design-system/src/*"],
       "@shared-types": ["packages/shared-types/src/index.ts"],
-      "@shared-utils/*": ["packages/shared-utils/src/*"],
-      "@shared-utils": ["packages/shared-utils/src/index.ts"]
+      "@shared-types/*": ["packages/shared-types/src/*"],
+      "@shared-utils": ["packages/shared-utils/src/index.ts"],
+      "@shared-utils/*": ["packages/shared-utils/src/*"]
     }
   }
 }
