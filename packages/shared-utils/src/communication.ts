@@ -9,11 +9,41 @@ const EVENT_MESSAGE = 'microfrontends:message';
 const EVENT_STATE = 'microfrontends:shared-state';
 const EVENT_IFRAME_BRIDGE = 'microfrontends:iframe-bridge';
 
+export const INSURANCE_EVENTS = {
+  customerUpdated: 'customer.updated',
+  insuranceContracted: 'insurance.contracted',
+} as const;
+
+export type Customer = {
+  id: string;
+  name: string;
+  cpf: string;
+  email: string;
+  phone: string;
+};
+
+export type Insurance = {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+};
+
+export type InsuranceContract = {
+  id: string;
+  customer: Customer;
+  insurance: Insurance;
+  contractDate: string;
+  status: 'Ativa';
+};
+
 type SharedState = {
   text: string;
   source: string;
   scope?: string;
   counter?: number;
+  customer?: Customer;
+  insuranceContract?: InsuranceContract;
   updatedAt: string;
 };
 
@@ -144,6 +174,18 @@ export function subscribeMessage(eventName: string, handler: (event: Event) => v
 
   window.addEventListener(eventName, handler);
   return () => window.removeEventListener(eventName, handler);
+}
+
+// API curta usada pelos MFEs de negócio. Mantém os produtores e consumidores
+// desacoplados: nenhum MFE importa o código de outro MFE.
+export function publish<T>(eventName: string, payload: T) {
+  publishMessage(eventName, payload);
+}
+
+export function subscribe<T>(eventName: string, handler: (payload: T) => void) {
+  return subscribeMessage(eventName, (event) => {
+    handler((event as CustomEvent<T>).detail);
+  });
 }
 
 // ---------------------------- iframe bridge (postMessage) ----------------------------

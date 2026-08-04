@@ -17,6 +17,14 @@ type NotificationItem = {
   title: string;
   message: string;
   unread: boolean;
+  date: string;
+};
+
+type InsuranceContract = {
+  id: string;
+  customer: { name: string };
+  insurance: { name: string; price: number };
+  contractDate: string;
 };
 
 type SharedState = {
@@ -145,6 +153,7 @@ function publishToParent(detail: unknown) {
                 </span>
               </div>
               <p style="margin: 0.35rem 0 0; color: #6b7280; font-size: 0.9rem;">{{ item.message }}</p>
+              <small style="display: block; margin-top: 0.35rem; color: #94a3b8;">{{ item.date | date:'dd/MM/yyyy, HH:mm' }}</small>
             </div>
             <button type="button" (click)="toggleRead(item)"
               style="flex-shrink: 0; padding: 0.4rem 0.8rem; border-radius: 0.5rem; border: 1px solid #d1d5db; background: white; color: #111827; cursor: pointer; font-size: 0.85rem;">
@@ -162,9 +171,7 @@ function publishToParent(detail: unknown) {
 })
 class AppComponent implements OnInit {
   notifications: NotificationItem[] = [
-    { id: 'n1', title: 'Novo pedido', message: 'O pedido #1024 foi confirmado.', unread: true },
-    { id: 'n2', title: 'Usuário novo', message: 'ana.silva@exemplo.com criou uma conta.', unread: true },
-    { id: 'n3', title: 'Atualização de sistema', message: 'A versão 2.4.1 foi publicada.', unread: false },
+    { id: 'welcome', title: 'Central de notificações', message: 'Acompanhe as contratações de seguros em tempo real.', unread: false, date: new Date().toISOString() },
   ];
 
   filter: Filter = 'all';
@@ -238,15 +245,31 @@ publishDemo() {
     }
   };
 
-  private handleSharedState = () => {
+  private handleSharedState = (event?: Event) => {
+    // Recebe detalhes enviados por setSharedState() dos outros MFEs
     this.syncFromSession();
   };
 
   private handleBridgeMessage = (event: MessageEvent) => {
-    const data = event.data as { channel?: string; payload?: SharedState } | null;
+    const data = event.data as { channel?: string; payload?: SharedState & { insuranceContracts?: InsuranceContract[] } } | null;
     if (data && data.channel === BRIDGE_CHANNEL && data.payload) {
       this.stateText = data.payload.text || this.stateText;
       this.sharedSource = data.payload.source || this.sharedSource;
+      const contracts = data.payload.insuranceContracts || [];
+      const knownIds = new Set(this.notifications.map((item) => item.id));
+      const newNotifications = contracts
+        .filter((contract) => !knownIds.has(`insurance-${contract.id}`))
+        .map((contract): NotificationItem => ({
+          id: `insurance-${contract.id}`,
+          title: 'Seguro contratado com sucesso',
+          message: `${contract.customer.name} contratou ${contract.insurance.name}.`,
+          unread: true,
+          date: contract.contractDate,
+        }));
+      if (newNotifications.length > 0) {
+        this.notifications = [...newNotifications, ...this.notifications].slice(0, 50);
+        this.publishCount();
+      }
     }
   };
 }
