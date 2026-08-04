@@ -1,4 +1,6 @@
-import './__federation_expose_App-CVnY-Hl-.js';
+import { importShared } from './__federation_fn_import-gVVR6EuA.js';
+import ProfileApp, { j as jsxRuntimeExports } from './__federation_expose_App-DcIJKu37.js';
+import { r as reactDomExports } from './index-D9Af7wOI.js';
 
 true&&(function polyfill() {
   const relList = document.createElement("link").relList;
@@ -37,3 +39,16 @@ true&&(function polyfill() {
     fetch(link.href, fetchOpts);
   }
 }());
+
+var client = {};
+
+var m = reactDomExports;
+{
+  client.createRoot = m.createRoot;
+  client.hydrateRoot = m.hydrateRoot;
+}
+
+const React = await importShared('react');
+client.createRoot(document.getElementById("root")).render(
+  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ProfileApp, {}) })
+);

@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "echo 'dashboard-mfe-react dev placeholder'",
-    "build": "echo 'dashboard-mfe-react build placeholder'",
-    "lint": "echo 'dashboard-mfe-react lint placeholder'"
+    "dev": "vite --host 127.0.0.1 --port 5001",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5001 --strictPort",
+    "lint": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "react": "^18.3.1",

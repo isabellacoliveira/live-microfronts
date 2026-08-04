@@ -356,7 +356,7 @@ function satisfy(version, range) {
 const currentImports = {};
 
 // eslint-disable-next-line no-undef
-const moduleMap = {'react':{get:()=>()=>__federation_import(new URL('__federation_shared_react-BCcI129A.js', import.meta.url).href),import:true},'react-dom':{get:()=>()=>__federation_import(new URL('__federation_shared_react-dom-BhMZJInU.js', import.meta.url).href),import:true},'@design-system':{get:()=>()=>__federation_import(new URL('__federation_shared_@design-system-eCuA4OT_.js', import.meta.url).href),import:true}};
+const moduleMap = {'react':{get:()=>()=>__federation_import(new URL('__federation_shared_react-BCcI129A.js', import.meta.url).href),import:true},'react-dom':{get:()=>()=>__federation_import(new URL('__federation_shared_react-dom-BhMZJInU.js', import.meta.url).href),import:true}};
 const moduleCache = Object.create(null);
 async function importShared(name, shareScope = 'default') {
   return moduleCache[name]

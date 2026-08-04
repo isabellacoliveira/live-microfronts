@@ -22,13 +22,17 @@ Este repositório mostra uma arquitetura de referência para um cenário hands-o
 ### 2. Rodar a base do projeto
 1. Instale as dependências:
    - `corepack pnpm install`
-2. Inicie o host:
-   - `corepack pnpm --filter host-react exec vite --host 127.0.0.1 --port 5173`
-3. Inicie os remotes:
-   - `corepack pnpm --filter dashboard-mfe-react exec vite --host 127.0.0.1 --port 5001`
-   - `corepack pnpm --filter profile-mfe-react exec vite --host 127.0.0.1 --port 5002`
-   - `corepack pnpm --filter notifications-mfe-angular exec vite --host 127.0.0.1 --port 5003`
+2. Construa e inicie os remotes (em terminais separados):
+   - `corepack pnpm --filter dashboard-mfe-react build`
+   - `corepack pnpm --filter dashboard-mfe-react preview`
+   - `corepack pnpm --filter profile-mfe-react build`
+   - `corepack pnpm --filter profile-mfe-react preview`
+3. Construa e inicie o host:
+   - `corepack pnpm --filter host-react build`
+   - `corepack pnpm --filter host-react preview`
 4. Acesse o host em `http://127.0.0.1:5173/`.
+
+> **Nota:** os remotes precisam estar disponíveis em preview antes do host, pois o host carrega o runtime via Module Federation. As portas são 5001 (dashboard), 5002 (profile) e 5173 (host). O fluxo em dev pode servir de referência, mas o preview é o mais confiável para demonstrar o carregamento remoto em runtime.
 
 ### 3. Demonstrar o host
 - Mostre que o host não tem regra de negócio, apenas orquestra o carregamento.

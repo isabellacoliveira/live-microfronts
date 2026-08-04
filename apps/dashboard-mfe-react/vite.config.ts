@@ -7,9 +7,14 @@ import federation from '@originjs/vite-plugin-federation';
 // Responsabilidade: expor o módulo principal para que o host possa carregá-lo em runtime.
 
 export default defineConfig({
+  server: {
+    port: 5001,
+    strictPort: true,
+  },
   resolve: {
     alias: {
-      '@design-system': fileURLToPath(new URL('../../packages/design-system/src/index.ts', import.meta.url)),
+      '@design-system': fileURLToPath(new URL('../../packages/design-system/src', import.meta.url)),
+      '@shared-utils': fileURLToPath(new URL('../../packages/shared-utils/src', import.meta.url)),
     },
   },
   plugins: [
@@ -18,9 +23,9 @@ export default defineConfig({
       name: 'dashboard_mfe',
       filename: 'remoteEntry.js',
       exposes: {
-        './App': './src/main.tsx',
+        './App': './src/App.tsx',
       },
-      shared: ['react', 'react-dom', '@design-system'],
+      shared: ['react', 'react-dom'],
     }),
   ],
   build: {

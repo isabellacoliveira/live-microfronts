@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "echo 'profile-mfe-react dev placeholder'",
-    "build": "echo 'profile-mfe-react build placeholder'",
-    "lint": "echo 'profile-mfe-react lint placeholder'"
+    "dev": "vite --host 127.0.0.1 --port 5002",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5002 --strictPort",
+    "lint": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "react": "^18.3.1",
