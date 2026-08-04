@@ -69,6 +69,8 @@ Na raiz do repositório, execute `./dev.sh`. O script faz o build e inicia o pre
 
 Abra [Host — orquestração e navegação](../../apps/host-react/src/main.tsx) e destaque:
 
+apps/host-react/src/main.tsx
+
 - `PortalDashboard()`: apenas consolida e exibe dados.
 - `navigate()`: muda a rota pelo hash da URL.
 - `content`: decide entre tela local do Host, remoto React ou iframe Angular.
@@ -94,11 +96,15 @@ Abra [Host — orquestração e navegação](../../apps/host-react/src/main.tsx)
 
 Abra [MFE Cliente — publicação do cadastro](../../apps/profile-mfe-react/src/features/register-customer/ui/RegisterCustomerForm.tsx) e siga o método `submit()`:
 
+apps/profile-mfe-react/src/features/register-customer/ui/RegisterCustomerForm.tsx
+
 1. O formulário cria o objeto `customer`.
 2. `setSharedState()` persiste o último cliente no `sessionStorage`.
 3. `publish(INSURANCE_EVENTS.customerUpdated, customer)` emite o evento `customer.updated`.
 
 Depois abra [Comunicação compartilhada](../../packages/shared-utils/src/communication.ts) e mostre:
+
+packages/shared-utils/src/communication.ts
 
 - `INSURANCE_EVENTS`: nomes centralizados dos eventos.
 - `publish()`: abstração sobre `window.dispatchEvent()`.
@@ -127,6 +133,8 @@ Depois abra [Comunicação compartilhada](../../packages/shared-utils/src/commun
 
 Abra [MFE Catálogo — consumo e contratação](../../apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx) e destaque:
 
+apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx
+
 - O estado inicial: `getSharedState().customer` recupera o cliente caso o MFE entre depois do evento.
 - O `useEffect()` com `subscribe<Customer>(INSURANCE_EVENTS.customerUpdated, setCustomer)` recebe atualizações futuras.
 - A função `contract()`: cria `InsuranceContract` e publica `insurance.contracted`.
@@ -151,6 +159,8 @@ Abra [MFE Catálogo — consumo e contratação](../../apps/dashboard-mfe-react/
 **No código**
 
 Volte para [Host — orquestração e navegação](../../apps/host-react/src/main.tsx) e mostre:
+
+apps/host-react/src/main.tsx
 
 - O `useEffect()` que assina `INSURANCE_EVENTS.insuranceContracted`.
 - `setContracts()`: adiciona contratos sem duplicá-los.
@@ -177,10 +187,14 @@ Volte para [Host — orquestração e navegação](../../apps/host-react/src/mai
 
 Abra [Host — orquestração e navegação](../../apps/host-react/src/main.tsx) e mostre `NotificationsFrame()`:
 
+apps/host-react/src/main.tsx
+
 - o iframe aponta para a porta `5003`;
 - `postMessageToIframe()` encaminha a lista de contratos.
 
 Depois abra [MFE Angular — consumo da ponte](../../apps/notifications-mfe-angular/src/main.ts) e explique que ele escuta mensagens no canal `microfrontends:iframe-bridge`.
+
+apps/notifications-mfe-angular/src/main.ts
 
 **Fala sugerida**
 
@@ -198,12 +212,12 @@ Com a aba **Network** filtrada por `remoteEntry`, navegue entre **Cliente** e **
 
 **No código**
 
-1. Abra [Host — configuração dos remotes](../../apps/host-react/vite.config.ts).
+1. Abra [Host — configuração dos remotes](../../apps/host-react/vite.config.ts). - apps/host-react/vite.config.ts
 2. Mostre `remotes`: `dashboard_mfe` aponta para a porta `5001` e `profile_mfe` para a porta `5002`.
 3. Mostre `shared: ["react", "react-dom"]`.
-4. Abra [MFE Catálogo — exposição federada](../../apps/dashboard-mfe-react/vite.config.ts).
+4. Abra [MFE Catálogo — exposição federada](../../apps/dashboard-mfe-react/vite.config.ts). - apps/dashboard-mfe-react/vite.config.ts
 5. Mostre `name: 'dashboard_mfe'` e `exposes: { './App': './src/App.tsx' }`.
-6. Volte ao `remoteLoaders` no [Host](../../apps/host-react/src/main.tsx): `import('dashboard_mfe/App')` e `import('profile_mfe/App')`.
+6. Volte ao `remoteLoaders` no [Host](../../apps/host-react/src/main.tsx): `import('dashboard_mfe/App')` e `import('profile_mfe/App')`. - apps/host-react/src/main.tsx
 
 **Fala sugerida**
 
@@ -217,7 +231,7 @@ Com a aba **Network** filtrada por `remoteEntry`, navegue entre **Cliente** e **
 
 | Ação | Evidência visível | Arquivo a abrir | Mensagem principal |
 | --- | --- | --- | --- |
-| Abrir Dashboard | visão consolidada vazia | [Host](../../apps/host-react/src/main.tsx) | Host orquestra; não tem regra de contratação. |
+| Abrir Dashboard | visão consolidada vazia | [Host](../../apps/host-react/src/main.tsx) | Host orquestra; não tem regra de contratação. | 
 | Salvar Cliente | confirmação de cadastro | [Formulário](../../apps/profile-mfe-react/src/features/register-customer/ui/RegisterCustomerForm.tsx) | MFE publica `customer.updated`. |
 | Abrir Catálogo | “Olá, Isabella” | [Catálogo](../../apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx) | Catálogo consome o contexto, sem importar o Cliente. |
 | Contratar 2 seguros | mensagens de sucesso | [Catálogo](../../apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx) | Catálogo publica `insurance.contracted`. |
@@ -230,6 +244,8 @@ Com a aba **Network** filtrada por `remoteEntry`, navegue entre **Cliente** e **
 ## Design System: demonstração curta (1 minuto extra)
 
 Se houver tempo, abra [packages/design-system/src](../../packages/design-system/src) e mostre `Button`, `Card`, `Input`, `Badge` e `Loading`.
+
+packages/design-system/src
 
 **Fala sugerida**
 
