@@ -44,14 +44,14 @@ Na raiz do repositório, execute `./dev.sh`. O script faz o build e inicia o pre
 
 ### Abas de código para deixar abertas
 
-1. [Host — orquestração e navegação](../../apps/host-react/src/main.tsx)
-2. [Host — configuração dos remotes](../../apps/host-react/vite.config.ts)
-3. [MFE Cliente — publicação do cadastro](../../apps/profile-mfe-react/src/features/register-customer/ui/RegisterCustomerForm.tsx)
-4. [MFE Catálogo — consumo e contratação](../../apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx)
-5. [MFE Catálogo — exposição federada](../../apps/dashboard-mfe-react/vite.config.ts)
-6. [Comunicação compartilhada](../../packages/shared-utils/src/communication.ts)
-7. [Design System](../../packages/design-system/src)
-8. [MFE Angular — consumo da ponte](../../apps/notifications-mfe-angular/src/main.ts)
+1. [Host — orquestração e navegação](../../apps/host-react/src/main.tsx) - apps/host-react/src/main.tsx
+2. [Host — configuração dos remotes](../../apps/host-react/vite.config.ts) - apps/host-react/vite.config.ts
+3. [MFE Cliente — publicação do cadastro](../../apps/profile-mfe-react/src/features/register-customer/ui/RegisterCustomerForm.tsx) - apps/profile-mfe-react/src/features/register-customer/ui/RegisterCustomerForm.tsx
+4. [MFE Catálogo — consumo e contratação](../../apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx) - apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx
+5. [MFE Catálogo — exposição federada](../../apps/dashboard-mfe-react/vite.config.ts) - apps/dashboard-mfe-react/vite.config.ts
+6. [Comunicação compartilhada](../../packages/shared-utils/src/communication.ts) - packages/shared-utils/src/communication.ts
+7. [Design System](../../packages/design-system/src) - packages/design-system/src
+8. [MFE Angular — consumo da ponte](../../apps/notifications-mfe-angular/src/main.ts) - apps/notifications-mfe-angular/src/main.ts
 
 ---
 
