@@ -1,11 +1,20 @@
-# TODO - Fazer os microfrontends rodarem
+# TODO - Complementar o MFE Angular com componentes de notificações
 
-## Tarefas
-- [x] 1. Corrigir scripts `dev`/`build`/`lint` dos apps React (host, dashboard, profile)
-- [x] 2. Corrigir `vite.config.ts` dos remotes (porta 5001/5002 + strictPort)
-- [x] 3. Corrigir `vite.config.ts` do host (127.0.0.1 + remoteEntry na raiz)
-- [x] 4. Criar `App.tsx` real em cada remote e expor no federation
-- [x] 5. Ajustar `main.tsx` dos remotes para bootstrap (montar App standalone)
-- [x] 6. Corrigir `main.tsx` do host para carregar remotes reais
-- [x] 7. Atualizar README com comandos corretos
-- [ ] 8. Testar dev dos remotes e host
+## Objetivo
+Evoluir o `notifications-mfe-angular` de placeholder para um MFE de notificações completo, conforme a spec arquitetural (§8): lista de notificações, badge de contador e configurações de preferências.
+
+## Plano
+
+### 1. Evoluir o componente principal
+- [x] 1.1. Reescrever `apps/notifications-mfe-angular/src/main.ts` com:
+  - Lista de notificações (`NotificationItem[]`) com `unread`
+  - Badge de contador de não lidas
+  - Filtro (todas / não lidas)
+  - Marcação de lida/não lida
+  - Estado compartilhado via sessionStorage + Custom Events
+  - Estilo consistente com o design system
+
+## Validação
+- [x] `corepack pnpm --filter notifications-mfe-angular lint` passa
+- [x] `corepack pnpm --filter notifications-mfe-angular build` passa
+- [ ] Host renderiza o MFE via iframe (porta 5003)

@@ -118,7 +118,7 @@ function DashboardApp() {
   useEffect(() => {
     const unsubscribe = subscribeMessage("microfrontends:shared-state", (event) => {
       const detail = event.detail;
-      setSharedStateValue(detail ?? getSharedState());
+      setSharedStateValue(detail ? { ...getSharedState(), ...detail } : getSharedState());
     });
     return unsubscribe;
   }, []);
@@ -127,17 +127,36 @@ function DashboardApp() {
     setSharedStateValue(nextState);
     publishMessage("microfrontends:message", { text: "Dashboard atualizou o estado" });
   };
+  const handleSyncFromSession = () => {
+    const nextState = getSharedState();
+    setSharedStateValue(nextState);
+    publishMessage("microfrontends:message", { text: `Sincronizado: ${nextState.text}` });
+  };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "1.5rem", display: "grid", gap: "1rem" }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "Dashboard MFE" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", padding: "1.25rem", borderRadius: "1rem" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { margin: 0 }, children: "Dashboard MFE" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: "0.35rem 0 0" }, children: "Este MFE recebe o estado do host e pode enviá-lo de volta." })
+    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "Indicadores" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Vendas: 42" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Usuários ativos: 180" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-        "Estado compartilhado: ",
-        sharedState.text
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gap: "0.5rem" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: 0 }, children: "Vendas: 42" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: 0 }, children: "Usuários ativos: 180" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: 0 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Último estado recebido:" }),
+          " ",
+          sharedState.text
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: 0 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Origem:" }),
+          " ",
+          sharedState.source
+        ] })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleUpdate, children: "Atualizar estado" })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "0.75rem", marginTop: "1rem", flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleUpdate, children: "Atualizar estado" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "secondary", onClick: handleSyncFromSession, children: "Sincronizar do sessionStorage" })
+      ] })
     ] })
   ] });
 }

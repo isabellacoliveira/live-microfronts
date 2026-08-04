@@ -3,7 +3,6 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "@design-system": ["../../packages/design-system/src/index.ts"],
       "@design-system/*": ["../../packages/design-system/src/*"]

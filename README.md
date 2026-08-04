@@ -34,6 +34,26 @@ Este repositório mostra uma arquitetura de referência para um cenário hands-o
 
 > **Nota:** os remotes precisam estar disponíveis em preview antes do host, pois o host carrega o runtime via Module Federation. As portas são 5001 (dashboard), 5002 (profile) e 5173 (host). O fluxo em dev pode servir de referência, mas o preview é o mais confiável para demonstrar o carregamento remoto em runtime.
 
+#### Atalho para macOS (sem depender do Turbo)
+Se quiser rodar tudo em background e evitar problemas com o `pnpm dev` no shell, use:
+
+```bash
+pkill -f 'vite preview --host 127.0.0.1 --port 5173' || true
+pkill -f 'vite preview --host 127.0.0.1 --port 5001' || true
+pkill -f 'vite preview --host 127.0.0.1 --port 5002' || true
+
+corepack pnpm --filter dashboard-mfe-react build
+corepack pnpm --filter profile-mfe-react build
+corepack pnpm --filter host-react build
+
+(corepack pnpm --filter dashboard-mfe-react preview > /tmp/dashboard-preview.log 2>&1 &) && \
+(corepack pnpm --filter profile-mfe-react preview > /tmp/profile-preview.log 2>&1 &) && \
+(corepack pnpm --filter host-react preview > /tmp/host-preview.log 2>&1 &)
+```
+
+Depois abra:
+- `http://127.0.0.1:5173/`
+
 ### 3. Demonstrar o host
 - Mostre que o host não tem regra de negócio, apenas orquestra o carregamento.
 - Clique nos botões de navegação e mostre a troca de contexto.

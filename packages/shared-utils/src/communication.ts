@@ -73,3 +73,11 @@ export function subscribeMessage(eventName: string, handler: (event: Event) => v
   window.addEventListener(eventName, handler);
   return () => window.removeEventListener(eventName, handler);
 }
+
+export function readSharedStateFromStorage() {
+  if (typeof window === 'undefined') {
+    return getSharedState();
+  }
+
+  return getSharedState();
+}

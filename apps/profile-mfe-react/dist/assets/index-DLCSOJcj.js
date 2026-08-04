@@ -1,5 +1,5 @@
 import { importShared } from './__federation_fn_import-gVVR6EuA.js';
-import DashboardApp, { j as jsxRuntimeExports } from './__federation_expose_App-CKpzhpFl.js';
+import ProfileApp, { j as jsxRuntimeExports } from './__federation_expose_App-DWJlBL3C.js';
 import { r as reactDomExports } from './index-D9Af7wOI.js';
 
 true&&(function polyfill() {
@@ -50,5 +50,5 @@ var m = reactDomExports;
 
 const React = await importShared('react');
 client.createRoot(document.getElementById("root")).render(
-  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(DashboardApp, {}) })
+  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ProfileApp, {}) })
 );

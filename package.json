@@ -3,9 +3,9 @@
   "private": true,
   "packageManager": "pnpm@11.18.0",
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint"
+    "build": "corepack pnpm exec turbo run build",
+    "dev": "corepack pnpm exec turbo run dev --parallel",
+    "lint": "corepack pnpm exec turbo run lint"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

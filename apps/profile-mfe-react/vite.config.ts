@@ -5,8 +5,11 @@ import federation from '@originjs/vite-plugin-federation';
 
 // Configuração do Profile MFE com Module Federation.
 // Responsabilidade: expor o módulo principal para o host.
+//
+// No Vite dev server o remoteEntry.js fica na RAÍZ (/remoteEntry.js).
+// No build/preview o remoteEntry.js fica em /assets/remoteEntry.js.
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   server: {
     port: 5002,
     strictPort: true,
@@ -32,9 +35,9 @@ export default defineConfig({
     target: 'esnext',
     minify: false,
   },
-  esbuild: {
+esbuild: {
     supported: {
       'top-level-await': true,
     },
   },
-});
+}));

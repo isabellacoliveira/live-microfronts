@@ -133,7 +133,7 @@ function ProfileApp() {
   useEffect(() => {
     const unsubscribe = subscribeMessage("microfrontends:shared-state", (event) => {
       const detail = event.detail;
-      setSharedStateValue(detail ?? getSharedState());
+      setSharedStateValue(detail ? { ...getSharedState(), ...detail } : getSharedState());
     });
     return unsubscribe;
   }, []);
@@ -142,17 +142,34 @@ function ProfileApp() {
     setSharedStateValue(nextState);
     publishMessage("microfrontends:message", { text: "Profile atualizou o estado" });
   };
+  const handleSyncFromSession = () => {
+    const nextState = getSharedState();
+    setSharedStateValue(nextState);
+    publishMessage("microfrontends:message", { text: `Sincronizado: ${nextState.text}` });
+  };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "1.5rem", display: "grid", gap: "1rem" }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "Profile MFE" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "linear-gradient(135deg, #0f766e, #14b8a6)", color: "white", padding: "1.25rem", borderRadius: "1rem" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { margin: 0 }, children: "Profile MFE" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: "0.35rem 0 0" }, children: "Este MFE recebe e envia o mesmo estado compartilhado." })
+    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "Dados do usuário" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { placeholder: "Nome" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { placeholder: "Email" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-        "Estado compartilhado: ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Último estado recebido:" }),
+        " ",
         sharedState.text
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleUpdate, children: "Atualizar estado" })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Origem:" }),
+        " ",
+        sharedState.source
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "0.75rem", marginTop: "1rem", flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleUpdate, children: "Atualizar estado" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "secondary", onClick: handleSyncFromSession, children: "Sincronizar do sessionStorage" })
+      ] })
     ] })
   ] });
 }

@@ -1,0 +1,11 @@
+pkill -f 'vite preview --host 127.0.0.1 --port 5173' || true
+pkill -f 'vite preview --host 127.0.0.1 --port 5001' || true
+pkill -f 'vite preview --host 127.0.0.1 --port 5002' || true
+
+corepack pnpm --filter dashboard-mfe-react build
+corepack pnpm --filter profile-mfe-react build
+corepack pnpm --filter host-react build
+
+(corepack pnpm --filter dashboard-mfe-react preview > /tmp/dashboard-preview.log 2>&1 &) && \
+(corepack pnpm --filter profile-mfe-react preview > /tmp/profile-preview.log 2>&1 &) && \
+(corepack pnpm --filter host-react preview > /tmp/host-preview.log 2>&1 &)
