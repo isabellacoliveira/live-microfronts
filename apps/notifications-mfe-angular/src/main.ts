@@ -1,8 +1,7 @@
 import 'zone.js';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import { bootstrapApplication } from '@angular/platform-browser';
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 // Notifications MFE Angular.
 // Responsabilidade: demonstrar um microfrontend Angular coexistindo com React.
@@ -72,6 +71,8 @@ function publishToParent(detail: unknown) {
 }
 
 @Component({
+  standalone: true,
+  imports: [CommonModule],
   selector: 'app-root',
   template: `
     <section style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 0.75rem; background: white; font-family: sans-serif;">
@@ -101,15 +102,15 @@ function publishToParent(detail: unknown) {
       <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
         <button type="button" (click)="syncFromSession()"
           style="padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #4f46e5; background: white; color: #111827; cursor: pointer;">
-          Sincronizar do sessionStorage
+          Receber estado atual do Host (Dashboard/Profile)
         </button>
         <button type="button" (click)="markAllAsRead()"
           style="padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #4f46e5; background: #4f46e5; color: white; cursor: pointer;">
-          Marcar todas como lidas
+          Marcar todas como lidas (local)
         </button>
         <button type="button" (click)="publishDemo()"
           style="padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #4f46e5; background: white; color: #111827; cursor: pointer;">
-          Publicar evento
+          Enviar notificação de volta ao Host
         </button>
       </div>
 
@@ -250,12 +251,5 @@ publishDemo() {
   };
 }
 
-@NgModule({
-  imports: [BrowserModule],
-  declarations: [AppComponent],
-  bootstrap: [AppComponent],
-})
-class AppModule {}
-
-platformBrowserDynamic().bootstrapModule(AppModule);
+bootstrapApplication(AppComponent);
 

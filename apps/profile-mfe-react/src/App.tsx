@@ -82,9 +82,9 @@ export default function ProfileApp() {
         <p><strong>Último estado recebido:</strong> {sharedState.text}</p>
         <p><strong>Origem:</strong> {sharedState.source}</p>
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-          <Button onClick={handlePublishProfile}>Publicar perfil</Button>
-          <Button onClick={handleUpdate}>Atualizar estado</Button>
-          <Button variant="secondary" onClick={handleSyncFromSession}>Sincronizar do sessionStorage</Button>
+          <Button onClick={handlePublishProfile}>📤 Enviar perfil ao Host (compartilha com Dashboard e Angular)</Button>
+          <Button onClick={handleUpdate}>📤 Enviar atualização de volta ao Host</Button>
+          <Button variant="secondary" onClick={handleSyncFromSession}>📥 Receber estado atual do Host</Button>
         </div>
       </Card>
       <Card>

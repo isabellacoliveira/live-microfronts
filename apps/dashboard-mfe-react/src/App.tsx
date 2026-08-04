@@ -85,8 +85,8 @@ export default function DashboardApp() {
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
           <Button onClick={handleIncrementCounter}>Incrementar meta (+1)</Button>
-          <Button onClick={handleUpdate}>Atualizar estado</Button>
-          <Button variant="secondary" onClick={handleSyncFromSession}>Sincronizar do sessionStorage</Button>
+          <Button onClick={handleUpdate}>📤 Enviar atualização de volta ao Host</Button>
+          <Button variant="secondary" onClick={handleSyncFromSession}>📥 Receber estado atual do Host</Button>
         </div>
       </Card>
       <Card>

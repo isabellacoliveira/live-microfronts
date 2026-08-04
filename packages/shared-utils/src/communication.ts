@@ -110,6 +110,13 @@ export function publishMessage(eventName: string, detail: unknown) {
     return;
   }
 
+  // Guarda contra recursão infinita: o evento de activity já é disparado pelo
+  // próprio appendActivity, então não devemos chamar appendActivity de novo aqui.
+  if (eventName === 'microfrontends:activity') {
+    window.dispatchEvent(new CustomEvent(eventName, { detail }));
+    return;
+  }
+
   const source =
     detail && typeof detail === 'object' && (detail as { source?: string }).source
       ? String((detail as { source?: string }).source)

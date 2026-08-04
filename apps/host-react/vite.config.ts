@@ -12,10 +12,8 @@ import federation from "@originjs/vite-plugin-federation";
 
 export default defineConfig(({ command }) => {
   const isDev = command === "serve";
-  // const remoteEntry = (port: number) =>
-  //   `http://127.0.0.1:${port}${isDev ? '/remoteEntry.js' : '/assets/remoteEntry.js'}`;
   const remoteEntry = (port: number) =>
-    `http://127.0.0.1:${port}/assets/remoteEntry.js`;
+    `http://127.0.0.1:${port}${isDev ? '/remoteEntry.js' : '/assets/remoteEntry.js'}`;
 
   return {
     server: {

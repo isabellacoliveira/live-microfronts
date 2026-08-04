@@ -46,9 +46,10 @@ const remoteLoaders: Record<string, () => Promise<RemoteModule>> = {
   dashboard: async () => {
     try {
       return await import("dashboard_mfe/App");
-    } catch (e) {
-      console.error("Erro ao carregar dashboard:", e);
-      throw e;
+    } catch {
+      return {
+        default: () => <p>O remote do dashboard não carregou em runtime.</p>,
+      };
     }
   },
   profile: async () => {
@@ -305,9 +306,11 @@ function App() {
           <Input
             value={draftValue}
             onChange={(event) => setDraftValue(event.target.value)}
-            placeholder="Escreva algo para compartilhar"
+            placeholder="Escreva algo para enviar aos MFEs"
           />
-          <Button onClick={handleShare}>Compartilhar via sessionStorage</Button>
+          <Button onClick={handleShare}>
+            📤 Enviar mensagem ao Dashboard, Profile e Angular (via sessionStorage + evento)
+          </Button>
         </div>
         <div
           style={{
@@ -318,13 +321,13 @@ function App() {
           }}
         >
           <p style={{ margin: 0 }}>
-            <strong>Última mensagem:</strong> {lastMessage}
+            <strong>Última mensagem recebida:</strong> {lastMessage}
           </p>
           <p style={{ margin: "0.35rem 0 0" }}>
             <strong>Estado compartilhado:</strong> {sharedState.text}
           </p>
           <p style={{ margin: "0.35rem 0 0" }}>
-            <strong>Origem atual:</strong> {sharedState.source}
+            <strong>Origem da última atualização:</strong> {sharedState.source}
           </p>
         </div>
       </Card>

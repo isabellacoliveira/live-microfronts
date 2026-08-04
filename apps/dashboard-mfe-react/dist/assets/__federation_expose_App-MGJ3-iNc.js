@@ -58,21 +58,6 @@ function Card({ children }) {
   );
 }
 
-function Input(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "input",
-    {
-      ...props,
-      style: {
-        padding: "0.75rem",
-        borderRadius: "0.5rem",
-        border: "1px solid #d1d5db",
-        width: "100%"
-      }
-    }
-  );
-}
-
 const STORAGE_KEY = "live-microfronts:shared-state";
 const ACTIVITY_KEY = "live-microfronts:activity-feed";
 const EVENT_STATE = "microfrontends:shared-state";
@@ -140,6 +125,10 @@ function publishMessage(eventName, detail) {
   if (typeof window === "undefined") {
     return;
   }
+  if (eventName === "microfrontends:activity") {
+    window.dispatchEvent(new CustomEvent(eventName, { detail }));
+    return;
+  }
   const source = detail && typeof detail === "object" && detail.source ? String(detail.source) : "host";
   appendActivity({
     source,
@@ -158,15 +147,20 @@ function subscribeMessage(eventName, handler) {
 }
 
 const {useEffect,useState} = await importShared('react');
-function ProfileApp() {
+function DashboardApp() {
   const [sharedState, setSharedStateValue] = useState(() => getSharedState());
-  const [name, setName] = useState("Isabella Cruz");
-  const [email, setEmail] = useState("isabella@exemplo.com");
+  const [localCounter, setLocalCounter] = useState(() => getSharedState().counter || 0);
   const [eventLog, setEventLog] = useState([]);
   useEffect(() => {
     const unsubscribe = subscribeMessage("microfrontends:shared-state", (event) => {
       const detail = event.detail;
-      setSharedStateValue(detail ? { ...getSharedState(), ...detail } : getSharedState());
+      if (detail) {
+        const next = { ...getSharedState(), ...detail };
+        setSharedStateValue(next);
+        if (detail.counter !== void 0) {
+          setLocalCounter(detail.counter);
+        }
+      }
     });
     const unsubscribeActivity = subscribeMessage("microfrontends:activity", (event) => {
       const entry = event.detail;
@@ -180,71 +174,66 @@ function ProfileApp() {
     };
   }, []);
   const handleUpdate = () => {
-    const nextState = setSharedState({ text: "Profile MFE atualizou o estado", source: "profile", scope: "profile" });
+    const nextState = setSharedState({ text: "Dashboard MFE atualizou o estado", source: "dashboard", scope: "dashboard" });
     setSharedStateValue(nextState);
-    publishMessage("microfrontends:message", { text: "Profile atualizou o estado", source: "profile" });
-  };
-  const handlePublishProfile = () => {
-    appendActivity({
-      source: "profile",
-      type: "event",
-      label: "Perfil atualizado",
-      detail: { name, email }
-    });
-    const nextState = setSharedState({
-      text: `Perfil: ${name} <${email}>`,
-      source: "profile",
-      scope: "profile"
-    });
-    setSharedStateValue(nextState);
-    publishMessage("microfrontends:message", {
-      text: `Profile: ${name} atualizou o perfil`,
-      source: "profile"
-    });
+    publishMessage("microfrontends:message", { text: "Dashboard atualizou o estado", source: "dashboard" });
   };
   const handleSyncFromSession = () => {
     const nextState = getSharedState();
     setSharedStateValue(nextState);
-    publishMessage("microfrontends:message", { text: `Sincronizado: ${nextState.text}`, source: "profile" });
+    publishMessage("microfrontends:message", { text: `Sincronizado: ${nextState.text}`, source: "dashboard" });
+  };
+  const handleIncrementCounter = () => {
+    const nextCounter = (localCounter || 0) + 1;
+    setLocalCounter(nextCounter);
+    const nextState = setSharedState({
+      text: `Dashboard incrementou contador para ${nextCounter}`,
+      source: "dashboard",
+      scope: "dashboard",
+      counter: nextCounter
+    });
+    setSharedStateValue(nextState);
+    appendActivity({
+      source: "dashboard",
+      type: "event",
+      label: "Contador incrementado",
+      detail: { counter: nextCounter }
+    });
+    publishMessage("microfrontends:message", {
+      text: `Dashboard: contador = ${nextCounter}`,
+      source: "dashboard"
+    });
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "1.5rem", display: "grid", gap: "1rem" }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "linear-gradient(135deg, #0f766e, #14b8a6)", color: "white", padding: "1.25rem", borderRadius: "1rem" }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { margin: 0 }, children: "Profile MFE" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: "0.35rem 0 0" }, children: "Este MFE recebe e envia o mesmo estado compartilhado." })
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", padding: "1.25rem", borderRadius: "1rem" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { margin: 0 }, children: "Dashboard MFE" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: "0.35rem 0 0" }, children: "Este MFE recebe o estado do host e pode enviá-lo de volta." })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "Dados do usuário" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Input,
-        {
-          placeholder: "Nome",
-          value: name,
-          onChange: (e) => setName(e.target.value)
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "0.5rem" } }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Input,
-        {
-          placeholder: "Email",
-          value: email,
-          onChange: (e) => setEmail(e.target.value)
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Último estado recebido:" }),
-        " ",
-        sharedState.text
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Origem:" }),
-        " ",
-        sharedState.source
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "Indicadores" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gap: "0.5rem" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: 0 }, children: "Vendas: 42" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: 0 }, children: "Usuários ativos: 180" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: 0 }, children: [
+          "Meta: ",
+          localCounter || 0,
+          " concluídas"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: 0 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Último estado recebido:" }),
+          " ",
+          sharedState.text
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: 0 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Origem:" }),
+          " ",
+          sharedState.source
+        ] })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "0.75rem", marginTop: "1rem", flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handlePublishProfile, children: "Publicar perfil" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleUpdate, children: "Atualizar estado" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "secondary", onClick: handleSyncFromSession, children: "Sincronizar do sessionStorage" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleIncrementCounter, children: "Incrementar meta (+1)" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleUpdate, children: "📤 Enviar atualização de volta ao Host" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "secondary", onClick: handleSyncFromSession, children: "📥 Receber estado atual do Host" })
       ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
@@ -272,4 +261,4 @@ function ProfileApp() {
   ] });
 }
 
-export { ProfileApp as default, jsxRuntimeExports as j };
+export { DashboardApp as default, jsxRuntimeExports as j };

@@ -1,5 +1,5 @@
 import { importShared } from './__federation_fn_import-gVVR6EuA.js';
-import DashboardApp, { j as jsxRuntimeExports } from './__federation_expose_App-LWLPbDvj.js';
+import DashboardApp, { j as jsxRuntimeExports } from './__federation_expose_App-MGJ3-iNc.js';
 import { r as reactDomExports } from './index-D9Af7wOI.js';
 
 true&&(function polyfill() {

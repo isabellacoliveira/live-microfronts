@@ -1,5 +1,5 @@
 import { importShared } from './__federation_fn_import-gVVR6EuA.js';
-import ProfileApp, { j as jsxRuntimeExports } from './__federation_expose_App-Cnpc-MZC.js';
+import ProfileApp, { j as jsxRuntimeExports } from './__federation_expose_App-C-AnWLy5.js';
 import { r as reactDomExports } from './index-D9Af7wOI.js';
 
 true&&(function polyfill() {
