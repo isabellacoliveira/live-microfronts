@@ -25,6 +25,38 @@ Em uma frase: **cada parte tem uma responsabilidade de negócio clara, o Host or
 
 ---
 
+## Conceitos curtos para explicar antes da demonstração
+
+### O que é um módulo?
+
+Um **módulo** é uma unidade de código com uma responsabilidade definida que pode exportar algo para ser usado em outro lugar. Esse “algo” pode ser uma função, um componente, um tipo ou uma constante.
+
+Exemplo deste projeto: cada MFE expõe o seu componente principal como um módulo chamado `./App`. O Host então o consome com `import('profile_mfe/App')` ou `import('dashboard_mfe/App')`.
+
+**Fala sugerida**
+
+> “Pense em módulo como uma peça de código com uma porta de entrada bem definida. Em vez de o Host copiar o código do Cliente, ele pede o módulo `App` que o MFE Cliente decidiu expor.”
+
+No contexto de Module Federation, o módulo pode estar em **outra aplicação e outro servidor**. Portanto, o import continua parecendo um import de JavaScript, mas a implementação é descoberta e carregada em runtime.
+
+### O que é `remoteEntry.js`?
+
+`remoteEntry.js` é o **arquivo de entrada do remote**. Ele funciona como um catálogo/runtime: informa ao Host quais módulos aquele MFE disponibiliza e como obter os arquivos JavaScript necessários para executá-los.
+
+Ele não é a tela inteira do MFE nem contém, necessariamente, todo o código do formulário. É o primeiro arquivo que permite ao Host localizar o módulo exposto, como `./App`; depois, o navegador pode buscar chunks adicionais da aplicação.
+
+### O que é um iframe?
+
+Um **iframe** é uma área dentro de uma página HTML que carrega outra página, com seu próprio documento, JavaScript e runtime. É como abrir uma pequena janela de navegador dentro da tela do Host.
+
+Neste projeto, o Host React abre a aplicação Angular da porta `5003` dentro de um iframe. Como as aplicações ficam isoladas, elas não importam componentes uma da outra. A troca de dados é feita explicitamente com `window.postMessage()`.
+
+**Fala sugerida**
+
+> “O iframe dá isolamento: o Angular pode rodar com seu próprio framework sem misturar o runtime com React. O custo é uma integração mais explícita: para conversar, as duas janelas enviam mensagens com um contrato combinado.”
+
+---
+
 ## Preparação antes de começar
 
 ### Checklist técnico (5 minutos antes)
@@ -51,7 +83,7 @@ Na raiz do repositório, execute `./dev.sh`. O script faz o build e inicia o pre
 5. [MFE Catálogo — exposição federada](../../apps/dashboard-mfe-react/vite.config.ts) - apps/dashboard-mfe-react/vite.config.ts
 6. [Comunicação compartilhada](../../packages/shared-utils/src/communication.ts) - packages/shared-utils/src/communication.ts
 7. [Design System](../../packages/design-system/src) - packages/design-system/src
-8. [MFE Angular — consumo da ponte](../../apps/notifications-mfe-angular/src/main.ts) - apps/notifications-mfe-angular/src/main.ts
+8. [MFE Angular — componente de notificações](../../apps/notifications-mfe-angular/src/app/notifications.component.ts) - apps/notifications-mfe-angular/src/app/notifications.component.ts
 
 ---
 
@@ -192,13 +224,15 @@ apps/host-react/src/main.tsx
 - o iframe aponta para a porta `5003`;
 - `postMessageToIframe()` encaminha a lista de contratos.
 
-Depois abra [MFE Angular — consumo da ponte](../../apps/notifications-mfe-angular/src/main.ts) e explique que ele escuta mensagens no canal `microfrontends:iframe-bridge`.
+Depois abra [MFE Angular — componente de notificações](../../apps/notifications-mfe-angular/src/app/notifications.component.ts) e explique que ele escuta mensagens no canal `microfrontends:iframe-bridge`.
 
-apps/notifications-mfe-angular/src/main.ts
+apps/notifications-mfe-angular/src/app/notifications.component.ts
 
 **Fala sugerida**
 
 > “Este é um caso de coexistência tecnológica. O Angular está isolado no seu runtime; por isso a integração é explícita, via iframe e `postMessage`, não por importação direta de componentes React.”
+
+> “Um iframe é uma página dentro de outra página. Ele traz isolamento entre os runtimes; em troca, não compartilhamos objetos JavaScript diretamente e precisamos de uma ponte de mensagens.”
 
 **Conceito comprovado:** um MFE pode usar outra tecnologia, com um contrato de integração adequado.
 
@@ -208,7 +242,29 @@ apps/notifications-mfe-angular/src/main.ts
 
 **No DevTools**
 
-Com a aba **Network** filtrada por `remoteEntry`, navegue entre **Cliente** e **Catálogo de seguros**. Mostre que os módulos remotos são buscados em runtime, e não incorporados estaticamente ao Host.
+Use uma aba anônima ou recarregue a página com o DevTools aberto. Na aba **Network**, marque **Disable cache** e filtre por `remoteEntry`.
+
+1. Com o Host no Dashboard, mostre que o remote do Cliente ainda não foi solicitado.
+2. Clique em **Cliente**. O navegador solicita `http://127.0.0.1:5002/assets/remoteEntry.js`.
+3. Abra essa requisição pela aba **Network** e, se quiser, abra a URL diretamente: http://127.0.0.1:5002/assets/remoteEntry.js.
+4. Explique que o clique disparou o `React.lazy()`, que por sua vez executou o import remoto `import('profile_mfe/App')`.
+5. Repita com **Catálogo de seguros** e mostre o `remoteEntry` vindo da porta `5001`.
+
+> Se o arquivo não aparecer novamente, não é erro: o navegador pode estar usando cache. Use **Disable cache** enquanto o DevTools estiver aberto ou recarregue em uma aba anônima.
+
+**O que explicar ao abrir `remoteEntry.js`**
+
+- “Este arquivo é a porta de entrada do MFE Cliente para o Host.”
+- “Ele registra que esse remote se chama `profile_mfe` e permite ao Host obter o módulo que foi exposto como `./App`.”
+- “O Host não recebeu o MFE Cliente no bundle inicial. Por isso, antes de clicar, ele não precisa baixar esse código.”
+- “Depois de encontrar o módulo, o runtime pode baixar outros chunks necessários. O `remoteEntry` é o ponto de descoberta, não a tela inteira.”
+- “Esse carregamento sob demanda reduz o JavaScript inicial, mas introduz uma dependência de rede e exige loading, fallback, cache e compatibilidade entre versões.”
+
+**Fala sugerida, em sequência**
+
+> “Até agora estou apenas no Host. Quando clico em Cliente, o Host executa um import dinâmico. Nesse momento, ele busca o `remoteEntry.js` do MFE Cliente na porta 5002. Esse arquivo é o catálogo que permite localizar o módulo `./App`. Só então o componente é carregado e renderizado. É isso que significa composição em runtime: o Host conhece o contrato e a URL do remote, mas não carrega antecipadamente todo o código dele.”
+
+**Importante:** não é necessário explicar cada linha minificada de `remoteEntry.js`. O valor da demonstração está em mostrar **quando** a requisição acontece, **de qual servidor** ela vem e **qual módulo** o Host pede.
 
 **No código**
 
@@ -236,7 +292,7 @@ Com a aba **Network** filtrada por `remoteEntry`, navegue entre **Cliente** e **
 | Abrir Catálogo | “Olá, Isabella” | [Catálogo](../../apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx) | Catálogo consome o contexto, sem importar o Cliente. |
 | Contratar 2 seguros | mensagens de sucesso | [Catálogo](../../apps/dashboard-mfe-react/src/features/contract-insurance/ui/InsuranceCatalog.tsx) | Catálogo publica `insurance.contracted`. |
 | Voltar ao Dashboard | cartões, badge e tabela atualizados | [Host](../../apps/host-react/src/main.tsx) | Host consolida eventos. |
-| Abrir Notificações | Angular dentro do iframe | [Angular](../../apps/notifications-mfe-angular/src/main.ts) | Tecnologias coexistem via contrato de ponte. |
+| Abrir Notificações | Angular dentro do iframe | [Angular](../../apps/notifications-mfe-angular/src/app/notifications.component.ts) | Tecnologias coexistem via contrato de ponte. |
 | Filtrar `remoteEntry` | carregamento remoto na rede | [Configuração Host](../../apps/host-react/vite.config.ts) | Federation carrega módulos em runtime. |
 
 ---

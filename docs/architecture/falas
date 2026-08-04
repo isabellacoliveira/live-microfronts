@@ -1,0 +1,252 @@
+# Apresentação - Microfrontends
+
+---
+
+## Slide 1: Problema que queremos resolver
+
+> "Antes de falar de Microfrontends, eu queria contextualizar por que essa arquitetura surgiu. Imaginem uma aplicação que começou pequena, mas foi crescendo ao longo dos anos. No início, um único time conseguia desenvolver tudo sem grandes problemas. Mas conforme a empresa cresce, novos times entram, novas funcionalidades aparecem e aquele projeto vai ficando cada vez mais complexo.
+> 
+
+> A primeira consequência é que muitas pessoas começam a trabalhar no mesmo código ao mesmo tempo. Isso aumenta muito a chance de conflitos e dificulta a colaboração. Outro problema é que funcionalidades completamente diferentes acabam compartilhando a mesma base de código. Então uma alteração no módulo de pagamento, por exemplo, pode acabar impactando cadastro ou autenticação, mesmo sem nenhuma relação direta.
+> 
+
+> Conforme os times aumentam, também fica difícil escalar o desenvolvimento. Todo mundo depende das mesmas regras, do mesmo pipeline e da mesma publicação. E aí começam os famosos conflitos de Git: merges intermináveis, pull requests esperando dias para serem aprovados porque um depende do outro, ou porque alguém alterou exatamente o mesmo arquivo.
+> 
+
+> O deploy também vira um gargalo. Como toda a aplicação é publicada de uma vez, se uma funcionalidade apresenta um bug, todo o restante da entrega acaba sendo bloqueado. Além disso, o pipeline de CI/CD cresce junto com a aplicação. Cada alteração executa testes, builds e validações do sistema inteiro, deixando tudo mais lento e aumentando o custo da infraestrutura.
+> 
+
+> O tempo de build também começa a incomodar. Mesmo mudando apenas uma tela pequena, muitas vezes é necessário recompilar toda a aplicação. E por fim aparecem os problemas de dependências. Um time precisa atualizar uma biblioteca, outro ainda depende da versão antiga, e manter tudo compatível passa a ser um desafio enorme.
+> 
+
+> Então, resumindo, o problema não é apenas o tamanho da aplicação. O verdadeiro desafio é conseguir manter autonomia, velocidade e qualidade conforme o sistema e os times crescem. É exatamente esse cenário que os Microfrontends tentam resolver."
+> 
+
+---
+
+"Então surge a pergunta: existe uma forma de dividir o frontend da mesma forma que dividimos o backend em microserviços? E é aí que entram os Microfrontends."
+
+---
+
+## 🏗️ Slide 2 — O que é um Monolito Frontend?
+
+> "Agora que entendemos os problemas, vamos dar um nome para esse modelo de aplicação. Esse tipo de arquitetura é o que chamamos de **Monolito Frontend**. No monolito existe apenas um projeto. Todo o código da aplicação fica dentro do mesmo repositório, normalmente existe um único processo de build e um único deploy.
+> 
+
+> Isso significa que todas as partes da aplicação acabam ficando muito acopladas. Mesmo que cadastro e pagamentos sejam funcionalidades completamente diferentes, elas fazem parte do mesmo projeto e compartilham o mesmo ciclo de desenvolvimento.
+> 
+
+> No começo isso é ótimo. A arquitetura é simples, fácil de entender e rápida de colocar em produção. O problema aparece quando o sistema cresce. Imagine uma aplicação de banco ou de e-commerce. Existem dezenas de equipes trabalhando ao mesmo tempo. Uma equipe cuida do login, outra dos seguros, outra dos investimentos, outra do atendimento.
+> 
+
+> Como tudo está no mesmo projeto, qualquer alteração pode impactar outras áreas da aplicação. As equipes começam a ficar bloqueadas umas pelas outras. As releases ficam enormes, porque várias funcionalidades precisam ser publicadas juntas. E chega um momento em que surge aquela sensação que muitos desenvolvedores conhecem muito bem: o medo de mexer no código. Você faz uma alteração pequena e pensa: 'Será que isso vai quebrar alguma coisa em outra área do sistema?'
+> 
+
+> Então o problema do monolito não é existir um único projeto. O problema é quando ele cresce tanto que começa a dificultar a evolução do produto."
+> 
+
+---
+
+## 🏗️ Slide 3 — O que é um Microfrontend?
+
+> "Foi justamente para resolver esse tipo de problema que surgiu o conceito de Microfrontends. A ideia é muito parecida com o que aconteceu no backend quando surgiram os microserviços. Em vez de termos um único frontend gigante, nós dividimos a aplicação em módulos menores e independentes. Cada módulo é responsável por uma parte do produto. Por exemplo, em um sistema de seguros, podemos ter um microfrontend responsável pelo cadastro do cliente, outro pelo dashboard, outro pela contratação de seguros e outro pela área financeira.
+> 
+
+> O mais interessante é que cada um desses módulos pode ser desenvolvido por uma equipe diferente. Essas equipes conseguem trabalhar com muito mais autonomia, evoluindo suas funcionalidades sem precisar esperar que toda a aplicação seja publicada. Mas alguém precisa reunir tudo isso para que o usuário veja apenas uma única aplicação.
+> 
+
+> Esse papel é do **Host**.
+> 
+
+> O Host funciona como um orquestrador. Ele não deveria concentrar regras de negócio. A responsabilidade dele é carregar os microfrontends, organizar a navegação e entregar uma experiência única para o usuário. Ou seja, para quem utiliza o sistema, parece existir apenas uma aplicação. Mas por trás dos bastidores existem vários projetos independentes trabalhando juntos. O grande objetivo dessa arquitetura é permitir que a aplicação e os times cresçam de forma independente, sem abrir mão de uma experiência consistente para o usuário. E daqui a pouco, no hands-on, vocês vão ver exatamente isso acontecendo na prática: vários projetos separados, rodando de forma independente, mas compondo uma única aplicação."
+> 
+
+---
+
+# 🏗️ Slide 4 — Shell, Host e Remote
+
+---
+
+## Fala
+
+> "Antes de entendermos como essa comunicação acontece, precisamos conhecer os papéis de cada aplicação dentro dessa arquitetura. O primeiro deles é o **Shell**, que muitas vezes também é chamado de **Host**. Na prática, os dois termos costumam ser usados como sinônimos. O Shell é a aplicação principal da arquitetura. É ele que o usuário acessa primeiro.
+> 
+
+> Sua responsabilidade é organizar toda a experiência da aplicação: controlar a navegação, as rotas, o layout compartilhado, menus, cabeçalho e decidir quais microfrontends precisam ser carregados em cada momento. Uma boa prática é que o Shell tenha pouca ou nenhuma regra de negócio. O foco dele deve ser orquestrar a aplicação, e não implementar funcionalidades.
+> 
+
+---
+
+> Do outro lado temos os **Remotes**. Cada Remote é um microfrontend independente. Ele possui seu próprio projeto, seu próprio pipeline, seu próprio processo de build e pode ser publicado separadamente dos demais. Além disso, cada Remote é responsável por uma funcionalidade específica do sistema.
+> 
+
+> Pensando no exemplo que vamos utilizar hoje, podemos ter um Remote responsável pelo cadastro do cliente, outro pela contratação de seguros e outro pelo dashboard que exibe os seguros contratados. O Shell simplesmente reúne todos esses módulos e faz com que, para o usuário, pareça existir apenas uma única aplicação."
+> 
+
+---
+
+## Fechamento (gancho para o próximo slide)
+
+> "Até aqui nós já sabemos quem participa da arquitetura: existe um Shell, existem vários Remotes e cada um tem sua responsabilidade.
+> 
+
+> Mas ainda falta responder uma pergunta importante: **como o Shell consegue carregar um Remote se eles são aplicações completamente separadas?**
+> 
+
+> É exatamente esse problema que o Webpack e o Module Federation resolvem."
+> 
+
+---
+
+## 🏗️ O que é Webpack?
+
+> "Agora que entendemos que existe um Host e existem vários Remotes, precisamos conhecer a tecnologia que tornou isso possível. Essa tecnologia é o **Webpack**. De forma simples, o Webpack é um **empacotador de módulos**, ou seja, uma ferramenta responsável por preparar a nossa aplicação para ser executada no navegador. Durante o desenvolvimento nós escrevemos o código dividido em vários arquivos: componentes React, arquivos TypeScript, CSS, imagens, fontes e diversas bibliotecas.
+> 
+
+> O navegador, por outro lado, não entende toda essa estrutura da forma como nós organizamos o projeto. Então o Webpack analisa todas essas dependências, entende quem importa quem, processa esses arquivos e gera bundles otimizados para produção. Além disso, ele oferece diversos recursos importantes, como suporte ao `import` e `export`, carregamento sob demanda — o famoso *lazy loading* — otimizações de performance e uma arquitetura baseada em plugins, que permite estender seu comportamento.
+> 
+
+> E é justamente através dessa arquitetura de plugins que surgiu o **Module Federation**. Ou seja, o Module Federation não é uma ferramenta separada. Ele é um recurso introduzido no **Webpack 5** para permitir que aplicações compartilhem módulos em tempo de execução. Então, antes de entender como os Microfrontends se comunicam, era importante conhecer quem está por trás dessa comunicação."
+> 
+
+---
+
+# 🏗️ Slide 1 — O que é o Module Federation?
+
+### Fala
+
+> "Agora chegamos à tecnologia que tornou os Microfrontends realmente viáveis. O **Module Federation** é um recurso introduzido no **Webpack 5** que permite que aplicações diferentes compartilhem módulos em tempo de execução.
+> 
+
+> Até então, quando fazíamos o build de uma aplicação, todo o código precisava estar presente naquele projeto. Ou seja, se eu quisesse utilizar um componente de outra aplicação, eu precisava copiar esse código, publicar um pacote ou criar alguma outra forma de compartilhamento. Com o Module Federation isso muda.
+> 
+
+> Agora uma aplicação pode consumir módulos que pertencem a outra aplicação, mesmo que elas tenham sido desenvolvidas, compiladas e publicadas separadamente. O Host não precisa conhecer a implementação do Remote. Ele precisa apenas saber onde esse Remote está disponível para poder carregá-lo quando necessário.
+> 
+
+> Isso permite que cada microfrontend continue sendo independente, com seu próprio ciclo de desenvolvimento e deploy, mas que, para o usuário, tudo funcione como se fosse uma única aplicação. É justamente essa independência, sem perder a integração, que faz do Module Federation uma das principais tecnologias para arquiteturas de Microfrontends."
+> 
+
+**Gancho para o próximo slide:**
+
+> "Mas como ele consegue fazer isso na prática? Existem três conceitos importantes que tornam esse funcionamento possível."
+> 
+
+---
+
+# ⚙️ Slide 2 — Como o Module Federation funciona?
+
+**Carregamento dinâmico**
+
+**Isolamento**
+
+**Compartilhamento**
+
+### Fala
+
+> "O primeiro conceito é o **carregamento dinâmico**. Diferente de uma importação tradicional, o módulo não precisa fazer parte do bundle da aplicação principal. Ele é baixado apenas quando realmente for necessário. Isso reduz o tamanho inicial da aplicação e permite que cada microfrontend evolua de forma independente.
+> 
+
+---
+
+> O segundo conceito é o **isolamento**. Cada aplicação decide exatamente o que deseja expor. Nem todo o código precisa ser compartilhado. Um Remote pode disponibilizar apenas uma página, um componente ou uma funcionalidade específica, mantendo todo o restante da implementação privado. Isso ajuda a preservar a autonomia das equipes e evita um alto acoplamento entre os projetos.
+> 
+
+---
+
+> E o terceiro conceito é o **compartilhamento de dependências**. Imagine que o Host e todos os Remotes utilizam React. Se cada aplicação carregasse sua própria cópia da biblioteca, o navegador faria downloads desnecessários e ainda poderíamos ter problemas de compatibilidade. Para evitar isso, o Module Federation permite compartilhar dependências. Um exemplo muito comum é configurar o React como **singleton**, garantindo que apenas uma instância da biblioteca seja utilizada por todas as aplicações. Isso reduz o tamanho da aplicação, melhora a performance e evita diversos problemas de execução."
+> 
+
+---
+
+## RemoteEntry.js
+
+E aí você fala:
+
+> "Vocês devem estar se perguntando: *'Como o Host descobre o que cada Remote disponibiliza?'* A resposta está nesse arquivo chamado **remoteEntry.js**. Sempre que fazemos o build de um Remote usando Module Federation, o Webpack gera automaticamente esse arquivo. Ele funciona como um catálogo de tudo aquilo que o Remote decidiu expor.
+> 
+
+> Quando o Host inicia, ele busca esse arquivo, descobre quais módulos estão disponíveis e só então faz o carregamento do que precisa. Daqui a pouco, no hands-on, nós vamos abrir o DevTools e ver esse arquivo sendo carregado em tempo real.
+> 
+
+---
+
+## 🔄 Slide — Ciclo de Vida do Microfrontend
+
+### Fala
+
+> "Até agora nós entendemos como o Host encontra um Remote e consegue carregá-lo. Mas ainda falta responder uma pergunta: o que acontece dentro do microfrontend quando ele é carregado? Para que essa orquestração funcione, normalmente cada microfrontend segue um pequeno ciclo de vida."
+> 
+
+---
+
+### 1. Bootstrap
+
+> "O primeiro passo é o **Bootstrap**. É o momento em que a aplicação é inicializada. Aqui são configurados os providers, o contexto da aplicação, dependências globais e tudo o que ela precisa para começar a funcionar. Podemos pensar no Bootstrap como a preparação do ambiente antes da aplicação aparecer para o usuário."
+> 
+
+---
+
+### 2. Mount
+
+> "Depois vem o **Mount**. É nesse momento que o Host diz: 'Agora eu preciso exibir esse microfrontend.' O Remote então renderiza sua interface dentro de um elemento específico da página. Se estivermos usando React, por exemplo, é aqui que acontece o `createRoot` e o `render`."
+> 
+
+---
+
+### 3. Unmount
+
+> "Quando o usuário sai daquela funcionalidade, acontece o **Unmount**. O microfrontend é desmontado. Componentes são removidos da tela, event listeners são limpos e recursos que não serão mais utilizados são liberados. Essa etapa é muito importante para evitar vazamentos de memória e garantir que um microfrontend não interfira no funcionamento dos outros."
+> 
+
+---
+
+### Fechamento
+
+> "Percebam que o Host controla todo esse ciclo. Ele decide quando um microfrontend deve aparecer e quando ele deve ser removido. Cada Remote apenas sabe como iniciar, como renderizar sua interface e como fazer a limpeza quando não for mais necessário. Isso permite que cada aplicação continue independente, mas trabalhando de forma coordenada dentro de uma única experiência para o usuário."
+> 
+
+---
+
+## ⚠️ Slide — Riscos: Fragmentação Excessiva
+
+> "Até agora eu apresentei vários benefícios dos Microfrontends. Mas é importante deixar claro que eles **não são uma bala de prata**. Assim como qualquer arquitetura, eles resolvem alguns problemas, mas também criam novos desafios. Se forem adotados sem necessidade ou implementados de forma inadequada, podem trazer mais complexidade do que benefícios."
+> 
+
+### Performance
+
+> "O primeiro ponto é a **performance**. Imagine uma aplicação onde um microfrontend foi desenvolvido em React, outro em Angular e outro em Vue. Tecnicamente isso é possível. Mas significa que o navegador precisará carregar vários frameworks diferentes ao mesmo tempo, aumentando o consumo de memória e o tempo de carregamento.
+> 
+
+> Outro problema comum é o compartilhamento de dependências. Se o `shared` do Module Federation não estiver configurado corretamente, cada microfrontend pode carregar sua própria versão do React ou de outras bibliotecas.
+> 
+
+> Em vez de uma única cópia, teremos várias, aumentando o tamanho da aplicação e desperdiçando recursos. Além disso, existe um pequeno custo de rede. Antes de carregar um Remote, o Host precisa buscar o arquivo `remoteEntry.js`. Em aplicações com muitos microfrontends, isso adiciona requisições extras que precisam ser consideradas."
+> 
+
+---
+
+### Manutenção
+
+> "Também existe um impacto na manutenção. Em vez de um único pipeline, agora podemos ter um pipeline para cada microfrontend. Precisamos gerenciar deploys independentes, versionamento, monitoramento e observabilidade de vários projetos diferentes. Outro desafio é manter uma experiência consistente para o usuário.
+> 
+
+> Se cada equipe criar seus próprios componentes, botões e estilos, rapidamente teremos aplicações com aparências diferentes. É por isso que arquiteturas de Microfrontends normalmente caminham junto com um **Design System** bem definido. E, por fim, o processo de debugging também muda.
+> 
+
+> Um erro pode começar no Host, passar por um Remote e envolver chamadas para outros serviços. Descobrir onde o problema realmente aconteceu pode ser mais complexo do que em uma aplicação monolítica."
+> 
+
+---
+
+### Fechamento
+
+> "Por isso existe uma regra que eu gosto bastante: **Não use Microfrontends porque eles estão na moda.** Use quando existe um problema real de escalabilidade de times, autonomia de desenvolvimento ou necessidade de deploy independente.
+> 
+
+> Se uma aplicação é pequena, possui um único time e um processo de entrega simples, provavelmente um monólito frontend será uma solução mais simples e mais eficiente. Arquitetura não é sobre escolher a tecnologia mais sofisticada. É sobre escolher a solução que melhor resolve o problema do contexto."
+> 
+
+---
+
+###

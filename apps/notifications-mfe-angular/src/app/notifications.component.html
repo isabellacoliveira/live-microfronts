@@ -1,0 +1,71 @@
+<section class="notifications">
+  <header class="notifications__header">
+    <div>
+      <h3>Notifications MFE</h3>
+      <p>Angular coexistindo com React no mesmo sistema.</p>
+    </div>
+    <span class="notifications__badge">
+      {{ unreadCount }} não lida{{ unreadCount === 1 ? '' : 's' }}
+    </span>
+  </header>
+
+  <section class="shared-state" aria-label="Estado compartilhado">
+    <p><strong>Estado compartilhado:</strong> {{ stateText }}</p>
+    <p><strong>Origem:</strong> {{ sharedSource }}</p>
+  </section>
+
+  <div class="actions">
+    <button type="button" class="button button--secondary" (click)="syncFromSession()">
+      Receber estado atual do Host (Dashboard/Profile)
+    </button>
+    <button type="button" class="button button--primary" (click)="markAllAsRead()">
+      Marcar todas como lidas (local)
+    </button>
+    <button type="button" class="button button--secondary" (click)="publishDemo()">
+      Enviar notificação de volta ao Host
+    </button>
+  </div>
+
+  <nav class="filters" aria-label="Filtros de notificações">
+    <button
+      type="button"
+      class="filter"
+      [class.filter--active]="filter === 'all'"
+      (click)="setFilter('all')"
+    >
+      Todas ({{ notifications.length }})
+    </button>
+    <button
+      type="button"
+      class="filter"
+      [class.filter--active]="filter === 'unread'"
+      (click)="setFilter('unread')"
+    >
+      Não lidas ({{ unreadCount }})
+    </button>
+  </nav>
+
+  <div class="notification-list">
+    <article
+      *ngFor="let item of filteredNotifications"
+      class="notification"
+      [class.notification--unread]="item.unread"
+    >
+      <div>
+        <div class="notification__title-row">
+          <strong>{{ item.title }}</strong>
+          <span *ngIf="item.unread" class="notification__new">nova</span>
+        </div>
+        <p>{{ item.message }}</p>
+        <small>{{ item.date | date:'dd/MM/yyyy, HH:mm' }}</small>
+      </div>
+      <button type="button" class="mark-read" (click)="toggleRead(item)">
+        {{ item.unread ? 'Marcar lida' : 'Marcar não lida' }}
+      </button>
+    </article>
+
+    <p *ngIf="filteredNotifications.length === 0" class="empty-state">
+      Nenhuma notificação {{ filter === 'unread' ? 'não lida' : 'disponível' }}.
+    </p>
+  </div>
+</section>
