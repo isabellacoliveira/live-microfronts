@@ -33,10 +33,12 @@ export default defineConfig(({ command }) => {
       federation({
         name: "host",
         filename: "remoteEntry.js",
+        // O Host conhece os endereços dos remotes; os módulos são baixados sob demanda.
         remotes: {
           dashboard_mfe: remoteEntry(5001),
           profile_mfe: remoteEntry(5002),
         },
+        // React e React DOM são candidatos a compartilhamento no runtime Federation.
         shared: ["react", "react-dom"],
       }),
     ],

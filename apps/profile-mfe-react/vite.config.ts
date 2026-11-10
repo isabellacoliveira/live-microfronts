@@ -25,6 +25,7 @@ export default defineConfig(({ command }) => ({
     federation({
       name: 'profile_mfe',
       filename: 'remoteEntry.js',
+      // API pública que o Host importa como profile_mfe/App.
       exposes: {
         './App': './src/App.tsx',
       },

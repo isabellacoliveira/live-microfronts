@@ -15,6 +15,8 @@ Este repositório mostra uma arquitetura de referência para um cenário hands-o
 
 ## Passo a passo para a apresentação
 
+Para o roteiro de aula de 1 hora, com falas sugeridas e demonstrações alinhadas ao código, consulte o [Roteiro de apresentação](docs/architecture/roteiro-apresentacao-1h.md).
+
 ### 1. Abrir o contexto da palestra
 - Comece explicando o problema do monólito frontend: acoplamento, equipe grande, deploy difícil e baixa autonomia.
 - Mostre a estrutura do monorepo e diga que o host é simples e os MFEs são responsáveis por domínios específicos.
@@ -33,6 +35,8 @@ Este repositório mostra uma arquitetura de referência para um cenário hands-o
 4. Acesse o host em `http://127.0.0.1:5173/`.
 
 > **Nota:** os remotes precisam estar disponíveis em preview antes do host, pois o host carrega o runtime via Module Federation. As portas são 5001 (dashboard), 5002 (profile) e 5173 (host). O fluxo em dev pode servir de referência, mas o preview é o mais confiável para demonstrar o carregamento remoto em runtime.
+
+Para um passo a passo de execução e diagnóstico de `remoteEntry.js`, consulte o [Guia para executar os MFEs](docs/guia-execucao-mfes.md).
 
 #### Atalho para macOS (sem depender do Turbo)
 Se quiser rodar tudo em background e evitar problemas com o `pnpm dev` no shell, use:

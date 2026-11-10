@@ -26,6 +26,7 @@ export default defineConfig(({ command }) => ({
     federation({
       name: 'dashboard_mfe',
       filename: 'remoteEntry.js',
+      // API pública que o Host importa como dashboard_mfe/App.
       exposes: {
         './App': './src/App.tsx',
       },

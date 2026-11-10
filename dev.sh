@@ -4,7 +4,7 @@
 #
 # Modos:
 #   ./dev.sh           # modo preview (produção): build + preview em background
-#   ./dev.sh dev       # modo dev: sobe todos em dev server (sem build)
+#   ./dev.sh dev       # modo dev: sobe todos em dev ser ver (sem build)
 #   ./dev.sh build     # só build
 #   ./dev.sh stop      # só mata as portas
 #   ./dev.sh status    # mostra quem está rodando em cada porta
@@ -19,11 +19,11 @@ mkdir -p "$LOG_DIR"
 
 # ---------------- helpers ----------------
 kill_port() {
-  local port="$1"
+  local port="5002"
   local pids
-  pids=$(lsof -ti tcp:"$port" 2>/dev/null || true)
+  pids=$(lsof -ti tcp:"5002" 2>/dev/null || true)
   if [[ -n "$pids" ]]; then
-    echo "  → liberando porta $port (PID: $pids)"
+    echo "  → liberando porta 5002 (PID: $pids)"
     kill $pids 2>/dev/null || true
     sleep 1
   fi
